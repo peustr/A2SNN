@@ -1,7 +1,7 @@
 {
     "dataset": "cifar10",
     "batch_size": 128,
-    "num_epochs": 100,
+    "num_epochs": 200,
     "lr": 0.001,
     "attack": "pgd",
     "reg_term": 0.1,
@@ -10,5 +10,9 @@
     "meta_train": false,
     "meta_epoch": 20,
     "meta_lr": 0.001,
-    "device": null
+    "device": null,
+    "output_path": {
+        "stats": "output/stats/baseline1_sesnn",
+        "models": "output/models/baseline1_sesnn"
+    }
 }
