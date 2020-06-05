@@ -32,9 +32,9 @@ class DataIndependentNoise(nn.Module):
 
     def forward(self, x):
         mu = self.fc_mu(self.nop_input)
-        var = self.fc_var(self.nop_input)
-        dist = Normal(mu, f.softplus(var - self.b))
-        x_sample = dist.rsample()
+        sigma = self.fc_sigma(self.nop_input)
+        self.dist = Normal(mu, f.softplus(sigma - self.b))
+        x_sample = self.dist.rsample()
         return x + x_sample
 
 
@@ -51,10 +51,10 @@ class DataIndependentMetaNoise(nn.Module):
 
     def forward(self, x):
         mu = self.fc_mu(self.nop_input)
-        var = self.fc_var(self.nop_input)
+        sigma = self.fc_sigma(self.nop_input)
         b = self.fc_b(self.nop_input)
-        dist = Normal(mu, f.softplus(var - b))
-        x_sample = dist.rsample()
+        self.dist = Normal(mu, f.softplus(sigma - b))
+        x_sample = self.dist.rsample()
         return x + x_sample
 
 
