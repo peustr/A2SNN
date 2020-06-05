@@ -46,9 +46,9 @@ def train_adv(model, train_loader, test_loader, attack, args, device='cpu'):
             loss = w * adv_loss + (1. - w) * clean_loss + args['reg_term'] * noise_entropy
             loss.backward()
             optimizer.step()
-    train_accuracy = accuracy(model, train_loader, device=device)
-    test_accuracy = accuracy(model, test_loader, device=device)
-    print('Epoch {}\t\tTrain acc: {:.3f}, Test acc: {:.3f}'.format(epoch + 1, train_accuracy, test_accuracy))
+        train_accuracy = accuracy(model, train_loader, device=device)
+        test_accuracy = accuracy(model, test_loader, device=device)
+        print('Epoch {}\t\tTrain acc: {:.3f}, Test acc: {:.3f}'.format(epoch + 1, train_accuracy, test_accuracy))
 
 
 def meta_train_adv(model, train_loader, test_loader, attack, args, device='cpu'):
