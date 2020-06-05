@@ -18,8 +18,8 @@ def parse_args():
 
 
 def main(args):
-    os.makedirs(args['output_paths']['stats'], exist_ok=True)
-    os.makedirs(args['output_paths']['models'], exist_ok=True)
+    os.makedirs(args['output_path']['stats'], exist_ok=True)
+    os.makedirs(args['output_path']['models'], exist_ok=True)
     if args['device'] is not None:
         device = args['device']
     else:
