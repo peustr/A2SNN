@@ -99,3 +99,14 @@ class MetaSESNN_ResNet18(nn.Module):
 
     def get_reg_term(self):
         return self.reg_term.item()
+
+
+def model_factory(dataset, meta_train, device='cpu'):
+    if dataset == 'cifar10':
+        if not meta_train:
+            model = SESNN_ResNet18(10, device=device)
+        else:
+            model = MetaSESNN_ResNet18(10, device=device)
+    else:
+        raise NotImplementedError('Model for dataset {} not implemented.'.format(dataset))
+    return model
