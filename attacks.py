@@ -10,7 +10,7 @@ def fgsm(model, data, target, epsilon=8./255., data_min=0, data_max=1):
 
     output = model(perturbed_data)
 
-    loss = F.cross_entropy(output, target)
+    loss = f.cross_entropy(output, target)
     if perturbed_data.grad is not None:
         perturbed_data.grad.data.zero_()
     loss.backward()
@@ -30,8 +30,8 @@ def pgd(model, data, target, k=7, epsilon=8./255., a=0.01, d_min=0, d_max=1):
     perturbed_data = data.clone()
     perturbed_data.requires_grad = True
 
-    data_max = data + self.epsilon
-    data_min = data - self.epsilon
+    data_max = data + epsilon
+    data_min = data - epsilon
     data_max.clamp_(d_min, d_max)
     data_min.clamp_(d_min, d_max)
 
@@ -42,7 +42,7 @@ def pgd(model, data, target, k=7, epsilon=8./255., a=0.01, d_min=0, d_max=1):
     for _ in range(k):
         output = model(perturbed_data)
 
-        loss = F.cross_entropy(output, target)
+        loss = f.cross_entropy(output, target)
         if perturbed_data.grad is not None:
             perturbed_data.grad.data.zero_()
         loss.backward()
