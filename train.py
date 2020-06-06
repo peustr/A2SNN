@@ -67,45 +67,50 @@ def meta_train_adv(model, train_loader, val_loader, test_loader, attack, args, d
     best_test_acc = -1.
     train_accuracy = []
     test_accuracy = []
+    val_iter = iter(val_loader)
     for epoch in range(args['num_epochs']):
-        for data_outer, target_outer in val_loader:
-            for data_inner, target_inner in train_loader:
-                data_inner = data_inner.to(device)
-                target_inner = target_inner.to(device)
-                # Apply the attack to generate perturbed data.
-                perturbed_data = attack(model, data_inner, target_inner).to(device)
-                model.train()
-                # Compute logits for clean and perturbed data.
-                logits_clean = model(data_inner)
-                logits_adv = model(perturbed_data)
-                optim_inner.zero_grad()
-                # Compute the cross-entropy loss for these logits.
-                clean_loss = loss_func(logits_clean, target_inner)
-                adv_loss = loss_func(logits_adv, target_inner)
-                noise_entropy = torch.relu(noise_entropy_threshold - model.noise.dist.entropy()).mean()
-                # Balance these two losses with weight w, and add the regularization term.
-                w = args['adv_loss_w']
-                loss = w * adv_loss + (1. - w) * clean_loss + model.get_reg_term() * noise_entropy
-                loss.backward()
-                optim_inner.step()
-            data_outer = data_outer.to(device)
-            target_outer = target_outer.to(device)
+        for data_inner, target_inner in train_loader:
+            data_inner = data_inner.to(device)
+            target_inner = target_inner.to(device)
             # Apply the attack to generate perturbed data.
-            perturbed_data = attack(model, data_outer, target_outer).to(device)
+            perturbed_data = attack(model, data_inner, target_inner).to(device)
             model.train()
             # Compute logits for clean and perturbed data.
-            logits_clean = model(data_outer)
+            logits_clean = model(data_inner)
             logits_adv = model(perturbed_data)
-            optim_outer.zero_grad()
+            optim_inner.zero_grad()
             # Compute the cross-entropy loss for these logits.
-            clean_loss = loss_func(logits_clean, target_outer)
-            adv_loss = loss_func(logits_adv, target_outer)
+            clean_loss = loss_func(logits_clean, target_inner)
+            adv_loss = loss_func(logits_adv, target_inner)
             noise_entropy = torch.relu(noise_entropy_threshold - model.noise.dist.entropy()).mean()
             # Balance these two losses with weight w, and add the regularization term.
             w = args['adv_loss_w']
             loss = w * adv_loss + (1. - w) * clean_loss + model.get_reg_term() * noise_entropy
             loss.backward()
-            optim_outer.step()
+            optim_inner.step()
+        try:
+            data_outer, target_outer = next(val_iter)
+        except StopIteration:
+            val_iter = iter(val_loader)
+            data_outer, target_outer = next(val_iter)
+        data_outer = data_outer.to(device)
+        target_outer = target_outer.to(device)
+        # Apply the attack to generate perturbed data.
+        perturbed_data = attack(model, data_outer, target_outer).to(device)
+        model.train()
+        # Compute logits for clean and perturbed data.
+        logits_clean = model(data_outer)
+        logits_adv = model(perturbed_data)
+        optim_outer.zero_grad()
+        # Compute the cross-entropy loss for these logits.
+        clean_loss = loss_func(logits_clean, target_outer)
+        adv_loss = loss_func(logits_adv, target_outer)
+        noise_entropy = torch.relu(noise_entropy_threshold - model.noise.dist.entropy()).mean()
+        # Balance these two losses with weight w, and add the regularization term.
+        w = args['adv_loss_w']
+        loss = w * adv_loss + (1. - w) * clean_loss + model.get_reg_term() * noise_entropy
+        loss.backward()
+        optim_outer.step()
         train_accuracy.append(accuracy(model, train_loader, device=device))
         test_accuracy.append(accuracy(model, test_loader, device=device))
         # Checkpoint current model.
