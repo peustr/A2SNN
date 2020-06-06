@@ -61,7 +61,7 @@ def meta_train_adv(model, train_loader, test_loader, attack, args, device='cpu')
     optim_outer = Adam([
         {'params': model.noise.fc_b.parameters()},
         {'params': model.reg_term.parameters()},
-    ], lr=args['lr'])
+    ], lr=args['meta_lr'])
     loss_func = nn.CrossEntropyLoss()
     noise_entropy_threshold = math.log(args['var_threshold']) + (1 + math.log(2 * math.pi)) / 2
     best_test_acc = -1.
