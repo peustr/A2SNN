@@ -53,14 +53,14 @@ def train_adv(model, train_loader, test_loader, attack, args, device='cpu'):
 
 def meta_train_adv(model, train_loader, test_loader, attack, args, device='cpu'):
     optim_inner = Adam([
-        model.gen.parameters(),
-        model.noise.fc_mu.parameters(),
-        model.noise.fc_sigma.parameters(),
-        model.proto.parameters(),
+        {'params': model.gen.parameters()},
+        {'params': model.noise.fc_mu.parameters()},
+        {'params': model.noise.fc_sigma.parameters()},
+        {'params': model.proto.parameters()},
     ], lr=args['lr'])
     optim_outer = Adam([
-        model.noise.fc_b.parameters(),
-        model.reg_term.parameters(),
+        {'params': model.noise.fc_b.parameters()},
+        {'params': model.reg_term.parameters()},
     ], lr=args['lr'])
     loss_func = nn.CrossEntropyLoss()
     noise_entropy_threshold = math.log(args['var_threshold']) + (1 + math.log(2 * math.pi)) / 2
@@ -70,6 +70,8 @@ def meta_train_adv(model, train_loader, test_loader, attack, args, device='cpu')
     for epoch in range(args['num_epochs']):
         for data_outer, target_outer in train_loader:
             for data_inner, target_inner in train_loader:
+                if epoch < args['meta_epoch']:
+                    break
                 data_inner = data_inner.to(device)
                 target_inner = target_inner.to(device)
                 # Apply the attack to generate perturbed data.

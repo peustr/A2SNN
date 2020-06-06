@@ -18,6 +18,7 @@ def parse_args():
 
 
 def main(args):
+    print(args)
     os.makedirs(args['output_path']['stats'], exist_ok=True)
     os.makedirs(args['output_path']['models'], exist_ok=True)
     if args['device'] is not None:
@@ -35,8 +36,10 @@ def main(args):
     else:
         raise NotImplementedError('Attack {} not implemented.'.format(args['attack']))
     if not args['meta_train']:
+        print('Adversarial training.')
         train_adv(model, train_loader, test_loader, attack, args, device=device)
     else:
+        print('Adversarial meta-training.')
         meta_train_adv(model, train_loader, test_loader, attack, args, device=device)
     print('Finished training.')
 
