@@ -89,7 +89,7 @@ class MetaSESNN_ResNet18(nn.Module):
         self.gen = GeneratorResNet18()
         self.noise = DataIndependentMetaNoise(512, device=device)
         self.proto = nn.Linear(512, C)
-        self.reg_term = RegTerm()
+        self.reg_term = RegTerm(device=device)
 
     def forward(self, x):
         x = self.gen(x)
