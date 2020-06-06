@@ -51,7 +51,7 @@ def train_adv(model, train_loader, test_loader, attack, args, device='cpu'):
     np.save(os.path.join(args['output_path']['stats'], 'test_acc.npy'), np.array(test_accuracy))
 
 
-def meta_train_adv(model, train_loader, test_loader, attack, args, device='cpu'):
+def meta_train_adv(model, train_loader, val_loader, test_loader, attack, args, device='cpu'):
     optim_inner = Adam([
         {'params': model.gen.parameters()},
         {'params': model.noise.fc_mu.parameters()},
@@ -68,10 +68,8 @@ def meta_train_adv(model, train_loader, test_loader, attack, args, device='cpu')
     train_accuracy = []
     test_accuracy = []
     for epoch in range(args['num_epochs']):
-        for data_outer, target_outer in train_loader:
+        for data_outer, target_outer in val_loader:
             for data_inner, target_inner in train_loader:
-                if epoch < args['meta_epoch']:
-                    break
                 data_inner = data_inner.to(device)
                 target_inner = target_inner.to(device)
                 # Apply the attack to generate perturbed data.

@@ -40,7 +40,8 @@ def main(args):
         train_adv(model, train_loader, test_loader, attack, args, device=device)
     else:
         print('Adversarial meta-training.')
-        meta_train_adv(model, train_loader, test_loader, attack, args, device=device)
+        val_loader = get_data_loader(args['dataset'], args['batch_size'], True)
+        meta_train_adv(model, train_loader, val_loader, test_loader, attack, args, device=device)
     print('Finished training.')
 
 
