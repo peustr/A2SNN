@@ -2,7 +2,7 @@ import torch
 from torchvision import datasets, transforms
 
 
-def get_data_loader(dataset, batch_size, train):
+def get_data_loader(dataset, batch_size, train, shuffle=True, drop_last=True):
     if dataset not in ('mnist', 'cifar10'):
         raise NotImplementedError('Dataset not supported.')
     if dataset == 'mnist':
@@ -24,5 +24,5 @@ def get_data_loader(dataset, batch_size, train):
                 transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
             ])
         d = datasets.CIFAR10('./data', train=train, transform=tr)
-    data_loader = torch.utils.data.DataLoader(d, batch_size=batch_size, shuffle=True, drop_last=True)
+    data_loader = torch.utils.data.DataLoader(d, batch_size=batch_size, shuffle=shuffle, drop_last=drop_last)
     return data_loader

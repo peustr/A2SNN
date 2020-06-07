@@ -13,5 +13,6 @@
     "output_path": {
         "stats": "output/stats/baseline1_sesnn",
         "models": "output/models/baseline1_sesnn"
-    }
+    },
+    "mc": 10
 }
