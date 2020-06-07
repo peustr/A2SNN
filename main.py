@@ -49,7 +49,7 @@ if __name__ == '__main__':
     try:
         args = parse_args()
     except IndexError:
-        print('Path to config file missing. Usage: python train.py <path to config>')
+        print('Path to config file missing. Usage: python main.py <path to config>')
         sys.exit()
     except FileNotFoundError:
         print('Incorrect path to config file. File not found.')
