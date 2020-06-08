@@ -21,7 +21,13 @@ def train_adv(model, train_loader, test_loader, attack, args, device='cpu'):
             data = data.to(device)
             target = target.to(device)
             # Apply the attack to generate perturbed data.
-            perturbed_data = attack(model, data, target).to(device)
+            if isinstance(args['epsilon'], float):
+                perturbed_data = attack(model, data, target, epsilon=args['epsilon']).to(device)
+            elif args['epsilon'] == 'rand':
+                rand_epsilon = np.random.choice([8. / 255., 16. / 255., 32. / 255., 64. / 255., 128. / 255.])
+                perturbed_data = attack(model, data, target, epsilon=rand_epsilon).to(device)
+            else:
+                perturbed_data = attack(model, data, target).to(device)
             model.train()
             # Compute logits for clean and perturbed data.
             logits_clean = model(data)
@@ -73,7 +79,13 @@ def meta_train_adv(model, train_loader, val_loader, test_loader, attack, args, d
             data_inner = data_inner.to(device)
             target_inner = target_inner.to(device)
             # Apply the attack to generate perturbed data.
-            perturbed_data = attack(model, data_inner, target_inner).to(device)
+            if isinstance(args['epsilon'], float):
+                perturbed_data = attack(model, data_inner, target_inner, epsilon=args['epsilon']).to(device)
+            elif args['epsilon'] == 'rand':
+                rand_epsilon = np.random.choice([8. / 255., 16. / 255., 32. / 255., 64. / 255., 128. / 255.])
+                perturbed_data = attack(model, data_inner, target_inner, epsilon=rand_epsilon).to(device)
+            else:
+                perturbed_data = attack(model, data_inner, target_inner).to(device)
             model.train()
             # Compute logits for clean and perturbed data.
             logits_clean = model(data_inner)
@@ -96,7 +108,13 @@ def meta_train_adv(model, train_loader, val_loader, test_loader, attack, args, d
             data_outer = data_outer.to(device)
             target_outer = target_outer.to(device)
             # Apply the attack to generate perturbed data.
-            perturbed_data = attack(model, data_outer, target_outer).to(device)
+            if isinstance(args['epsilon'], float):
+                perturbed_data = attack(model, data_outer, target_outer, epsilon=args['epsilon']).to(device)
+            elif args['epsilon'] == 'rand':
+                rand_epsilon = np.random.choice([8. / 255., 16. / 255., 32. / 255., 64. / 255., 128. / 255.])
+                perturbed_data = attack(model, data_outer, target_outer, epsilon=rand_epsilon).to(device)
+            else:
+                perturbed_data = attack(model, data_outer, target_outer).to(device)
             model.train()
             # Compute logits for clean and perturbed data.
             logits_clean = model(data_outer)

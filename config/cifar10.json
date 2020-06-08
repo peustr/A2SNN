@@ -6,13 +6,14 @@
     "attack": "pgd",
     "reg_term": 0.1,
     "var_threshold": 16.0,
+    "epsilon": "rand",
     "adv_loss_w": 0.5,
-    "meta_train": false,
+    "meta_train": true,
     "meta_lr": 0.001,
     "device": null,
     "output_path": {
-        "stats": "output/stats/baseline1_sesnn",
-        "models": "output/models/baseline1_sesnn"
+        "stats": "output/stats/meta_sesnn",
+        "models": "output/models/meta_sesnn"
     },
     "mc": 10
 }
