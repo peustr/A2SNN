@@ -29,7 +29,7 @@ def main(args):
     model.load_state_dict(torch.load(ckpt_best))
     model.eval()
     epsilons = [0. / 255, 1. / 255, 2. / 255, 4. / 255, 8. / 255, 16. / 255, 32. / 255, 64. / 255, 128. / 255]
-    fbox_model = PyTorchModel(model, bounds=(0, 1))
+    fbox_model = PyTorchModel(model, bounds=(0, 1), device=device)
     test_loader = get_data_loader(args['dataset'], args['batch_size'], False, shuffle=False, drop_last=False)
     attacks = [
         FGSMMC(),
