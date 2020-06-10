@@ -28,14 +28,18 @@ def main(args):
     ckpt_best = os.path.join(args['output_path']['models'], 'ckpt_best.pt')
     model.load_state_dict(torch.load(ckpt_best))
     model.eval()
-    epsilons = [0. / 255, 1. / 255, 2. / 255, 4. / 255, 8. / 255, 16. / 255, 32. / 255, 64. / 255, 128. / 255]
-    fbox_model = PyTorchModel(model, bounds=(0, 1), device=device)
+    if args['dataset'] == 'cifar10':
+        preprocessing = dict(mean=(0.4914, 0.4822, 0.4465), std=(0.2023, 0.1994, 0.2010), axis=-3)
+    else:
+        preprocessing = None
+    fbox_model = PyTorchModel(model, bounds=(0, 1), device=device, preprocessing=preprocessing)
     test_loader = get_data_loader(args['dataset'], args['batch_size'], False, shuffle=False, drop_last=False)
     attacks = [
         FGSMMC(),
         BIMMC(rel_stepsize=0.1),
         PGDMC(rel_stepsize=0.1, steps=10),
     ]
+    epsilons = [0. / 255, 1. / 255, 2. / 255, 4. / 255, 8. / 255, 16. / 255, 32. / 255, 64. / 255, 128. / 255]
     for attack in attacks:
         success_cum = []
         for data, target in test_loader:
