@@ -17,7 +17,7 @@ class RegTerm(nn.Module):
         return x
 
     def item(self):
-        return self.reg_term(self.nop_input)
+        return f.softplus(self.reg_term(self.nop_input))
 
 
 class DataIndependentNoise(nn.Module):
