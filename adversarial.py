@@ -85,6 +85,7 @@ def meta_train_adv(model, train_loader, val_loader, test_loader, attack, args, d
     best_test_acc = -1.
     train_accuracy = []
     test_accuracy = []
+    b_hist, reg_term_hist = [], []
     val_iter = iter(val_loader)
     for epoch in range(args['num_epochs']):
         for data_inner, target_inner in train_loader:
@@ -149,6 +150,8 @@ def meta_train_adv(model, train_loader, val_loader, test_loader, attack, args, d
             optim_outer.step()
         train_accuracy.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_accuracy.append(accuracy(model, test_loader, device=device, norm=norm_func))
+        b_hist.append(model.get_b_vector().detach().numpy())
+        reg_term_hist.append(model.get_reg_term().detach().numpy())
         # Checkpoint current model.
         torch.save(model.state_dict(), os.path.join(args['output_path']['models'], 'ckpt.pt'))
         # Save model with best testing performance.
@@ -160,3 +163,5 @@ def meta_train_adv(model, train_loader, val_loader, test_loader, attack, args, d
     # Also save the training and testing curves.
     np.save(os.path.join(args['output_path']['stats'], 'train_acc.npy'), np.array(train_accuracy))
     np.save(os.path.join(args['output_path']['stats'], 'test_acc.npy'), np.array(test_accuracy))
+    np.save(os.path.join(args['output_path']['stats'], 'b_hist.npy'), np.array(b_hist))
+    np.save(os.path.join(args['output_path']['stats'], 'reg_term_hist.npy'), np.array(reg_term_hist))

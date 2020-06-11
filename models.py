@@ -57,6 +57,9 @@ class DataIndependentMetaNoise(nn.Module):
         x_sample = self.dist.rsample()
         return x + x_sample
 
+    def get_b_vector(self):
+        return self.fc_b(self.nop_input)
+
 
 class GeneratorResNet18(nn.Module):
     def __init__(self):
@@ -99,6 +102,9 @@ class MetaSESNN_ResNet18(nn.Module):
 
     def get_reg_term(self):
         return self.reg_term.item()
+
+    def get_b_vector(self):
+        return self.noise.get_b_vector()
 
 
 def model_factory(dataset, meta_train, device='cpu'):
