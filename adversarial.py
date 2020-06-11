@@ -150,8 +150,8 @@ def meta_train_adv(model, train_loader, val_loader, test_loader, attack, args, d
             optim_outer.step()
         train_accuracy.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_accuracy.append(accuracy(model, test_loader, device=device, norm=norm_func))
-        b_hist.append(model.get_b_vector().detach().numpy())
-        reg_term_hist.append(model.get_reg_term().detach().numpy())
+        b_hist.append(model.get_b_vector().detach().cpu().numpy())
+        reg_term_hist.append(model.get_reg_term().detach().cpu().numpy())
         # Checkpoint current model.
         torch.save(model.state_dict(), os.path.join(args['output_path']['models'], 'ckpt.pt'))
         # Save model with best testing performance.
