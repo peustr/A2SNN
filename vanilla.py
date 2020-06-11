@@ -6,11 +6,16 @@ import torch.nn as nn
 from torch.optim import Adam
 
 from metrics import accuracy
+from utils import normalize_cifar10
 
 
 def train_vanilla(model, train_loader, test_loader, args, device='cpu'):
     optimizer = Adam(model.parameters(), lr=args['lr'])
     loss_func = nn.CrossEntropyLoss()
+    if args['dataset'] == 'cifar10':
+        norm_func = normalize_cifar10
+    else:
+        norm_func = None
     best_test_acc = -1.
     train_accuracy = []
     test_accuracy = []
@@ -19,13 +24,15 @@ def train_vanilla(model, train_loader, test_loader, args, device='cpu'):
             data = data.to(device)
             target = target.to(device)
             model.train()
+            if norm_func is not None:
+                data = norm_func(data)
             logits = model(data)
             optimizer.zero_grad()
             loss = loss_func(logits, target)
             loss.backward()
             optimizer.step()
-        train_accuracy.append(accuracy(model, train_loader, device=device))
-        test_accuracy.append(accuracy(model, test_loader, device=device))
+        train_accuracy.append(accuracy(model, train_loader, device=device, norm=norm_func))
+        test_accuracy.append(accuracy(model, test_loader, device=device, norm=norm_func))
         # Checkpoint current model.
         torch.save(model.state_dict(), os.path.join(args['output_path']['models'], 'ckpt.pt'))
         # Save model with best testing performance.
