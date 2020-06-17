@@ -55,11 +55,12 @@ class MetaSESNN_ResNet18(nn.Module):
     """ Trainable b and reg. term. """
     def __init__(self, C, device='cpu'):
         super().__init__()
+        self.device = device
         self.gen = GeneratorResNet18()
         self.noise = DataIndependentNoise(512, device=device)
         self.proto = nn.Linear(512, C)
-        self.b = torch.rand(512, requires_grad=True)
-        self.lambda2 = torch.rand(1, requires_grad=True)
+        self.b = torch.rand(512, requires_grad=True).to(self.device)
+        self.lambda2 = torch.rand(1, requires_grad=True).to(self.device)
 
     def forward(self, x):
         x = self.gen(x)
