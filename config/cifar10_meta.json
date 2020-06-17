@@ -1,0 +1,19 @@
+{
+    "dataset": "cifar10",
+    "batch_size": 128,
+    "num_epochs": 200,
+    "lr": 0.001,
+    "attack": "pgd",
+    "reg_term": 0.1,
+    "var_threshold": 16.0,
+    "epsilon": null,
+    "adv_loss_w": 0.5,
+    "meta_train": true,
+    "meta_lr": 0.001,
+    "device": "cuda:2",
+    "output_path": {
+        "stats": "output/stats/meta_sesnn",
+        "models": "output/models/meta_sesnn"
+    },
+    "mc": 10
+}
