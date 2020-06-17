@@ -71,8 +71,8 @@ def meta_train_adv(model, train_loader, val_loader, test_loader, attack, args, d
         {'params': model.proto.parameters()},
     ], lr=args['lr'])
     optim_outer = Adam([
-        {'params': model.get_b()},
-        {'params': model.get_lambda2()},
+        {'params': model.b},
+        {'params': model.lambda2},
     ], lr=args['meta_lr'])
     loss_func_inner = nn.CrossEntropyLoss(reduction='mean')
     loss_func_outer = nn.CrossEntropyLoss(reduction='sum')
