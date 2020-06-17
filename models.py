@@ -59,8 +59,8 @@ class MetaSESNN_ResNet18(nn.Module):
         self.gen = GeneratorResNet18()
         self.noise = DataIndependentNoise(512, device=device)
         self.proto = nn.Linear(512, C)
-        self.b = torch.rand(512, requires_grad=True).to(self.device)
-        self.lambda2 = torch.rand(1, requires_grad=True).to(self.device)
+        self.b = torch.rand(512, requires_grad=True, device=self.device)
+        self.lambda2 = torch.rand(1, requires_grad=True, device=self.device)
 
     def forward(self, x):
         x = self.gen(x)
