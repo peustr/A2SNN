@@ -25,8 +25,7 @@ def main(args):
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model = model_factory(args['dataset'], args['meta_train'], device=device)
     model.to(device)
-    ckpt_best = os.path.join(args['output_path']['models'], 'ckpt_best.pt')
-    model.load_state_dict(torch.load(ckpt_best))
+    model.load(os.path.join(args['output_path']['models'], 'ckpt_best'))
     model.eval()
     if args['dataset'] == 'cifar10':
         preprocessing = dict(mean=(0.4914, 0.4822, 0.4465), std=(0.2023, 0.1994, 0.2010), axis=-3)
