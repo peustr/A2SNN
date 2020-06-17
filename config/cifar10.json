@@ -4,6 +4,8 @@
     "num_epochs": 200,
     "lr": 0.001,
     "attack": "pgd",
+    "reg_term": 0.1,
+    "var_threshold": 16.0,
     "epsilon": "rand",
     "adv_loss_w": 0.5,
     "meta_train": true,
