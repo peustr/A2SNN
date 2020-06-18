@@ -11,7 +11,11 @@ from utils import normalize_cifar10
 
 
 def train_adv(model, train_loader, test_loader, attack, args, device='cpu'):
-    optimizer = Adam(model.parameters(), lr=args['lr'])
+    optimizer = Adam([
+        {'params': model.gen.parameters()},
+        {'params': model.sigma},
+        {'params': model.proto.parameters()},
+    ], lr=args['lr'])
     loss_func = nn.CrossEntropyLoss()
     if args['dataset'] == 'cifar10':
         norm_func = normalize_cifar10
@@ -20,6 +24,7 @@ def train_adv(model, train_loader, test_loader, attack, args, device='cpu'):
     best_test_acc = -1.
     train_accuracy = []
     test_accuracy = []
+    sigma_hist = []
     for epoch in range(args['num_epochs']):
         for data, target in train_loader:
             data = data.to(device)
@@ -44,7 +49,7 @@ def train_adv(model, train_loader, test_loader, attack, args, device='cpu'):
             clean_loss = loss_func(logits_clean, target)
             adv_loss = loss_func(logits_adv, target)
             threshold = math.log(args['var_threshold']) + (1 + math.log(2 * math.pi)) / 2
-            noise_entropy = torch.relu(threshold - model.noise.dist.entropy()).mean()
+            noise_entropy = torch.relu(threshold - model.dist.entropy()).mean()
             # Balance these two losses with weight w, and add the regularization term.
             w = args['adv_loss_w']
             loss = w * adv_loss + (1. - w) * clean_loss + args['reg_term'] * noise_entropy
@@ -52,6 +57,7 @@ def train_adv(model, train_loader, test_loader, attack, args, device='cpu'):
             optimizer.step()
         train_accuracy.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_accuracy.append(accuracy(model, test_loader, device=device, norm=norm_func))
+        sigma_hist.append(model.sigma.detach().cpu().numpy())
         # Checkpoint current model.
         model.save(os.path.join(args['output_path']['models'], 'ckpt'))
         # Save model with best testing performance.
@@ -63,12 +69,13 @@ def train_adv(model, train_loader, test_loader, attack, args, device='cpu'):
     # Also save the training and testing curves.
     np.save(os.path.join(args['output_path']['stats'], 'train_acc.npy'), np.array(train_accuracy))
     np.save(os.path.join(args['output_path']['stats'], 'test_acc.npy'), np.array(test_accuracy))
+    np.save(os.path.join(args['output_path']['stats'], 'sigma_hist.npy'), np.array(sigma_hist))
 
 
 def meta_train_adv(model, train_loader, val_loader, test_loader, attack, args, device='cpu'):
     optim_inner = Adam([
         {'params': model.gen.parameters()},
-        {'params': model.noise.fc_sigma.parameters()},
+        {'params': model.sigma},
         {'params': model.proto.parameters()},
     ], lr=args['lr'])
     optim_outer = Adam([
@@ -76,7 +83,7 @@ def meta_train_adv(model, train_loader, val_loader, test_loader, attack, args, d
         {'params': model.lambda2},
     ], lr=args['meta_lr'])
     loss_func_inner = nn.CrossEntropyLoss(reduction='mean')
-    loss_func_outer = nn.CrossEntropyLoss(reduction='sum')
+    loss_func_outer = nn.CrossEntropyLoss(reduction='mean')
     if args['dataset'] == 'cifar10':
         norm_func = normalize_cifar10
     else:
@@ -84,7 +91,7 @@ def meta_train_adv(model, train_loader, val_loader, test_loader, attack, args, d
     best_test_acc = -1.
     train_accuracy = []
     test_accuracy = []
-    b_hist, lambda2_hist = [], []
+    sigma_hist, b_hist, lambda2_hist = [], [], []
     val_iter = iter(val_loader)
     for epoch in range(args['num_epochs']):
         for data_inner, target_inner in train_loader:
@@ -110,7 +117,7 @@ def meta_train_adv(model, train_loader, val_loader, test_loader, attack, args, d
             clean_loss_inner = loss_func_inner(logits_clean_inner, target_inner)
             adv_loss_inner = loss_func_inner(logits_adv_inner, target_inner)
             threshold_inner = model.get_b() + (1 + math.log(2 * math.pi)) / 2
-            noise_entropy_inner = torch.relu(threshold_inner - model.noise.dist.entropy()).mean()
+            noise_entropy_inner = torch.relu(threshold_inner - model.dist.entropy()).mean()
             # Balance these two losses with weight w, and add the regularization term.
             w = args['adv_loss_w']
             loss_inner = w * adv_loss_inner + (1. - w) * clean_loss_inner + model.get_lambda2() * noise_entropy_inner
@@ -143,7 +150,7 @@ def meta_train_adv(model, train_loader, val_loader, test_loader, attack, args, d
             clean_loss_outer = loss_func_outer(logits_clean_outer, target_outer)
             adv_loss_outer = loss_func_outer(logits_adv_outer, target_outer)
             threshold_outer = model.get_b() + (1 + math.log(2 * math.pi)) / 2
-            noise_entropy_outer = torch.relu(threshold_outer - model.noise.dist.entropy()).mean()
+            noise_entropy_outer = torch.relu(threshold_outer - model.dist.entropy()).mean()
             # Balance these two losses with weight w, and add the regularization term.
             w = args['adv_loss_w']
             loss_outer = w * adv_loss_outer + (1. - w) * clean_loss_outer + model.get_lambda2() * noise_entropy_outer
@@ -151,6 +158,7 @@ def meta_train_adv(model, train_loader, val_loader, test_loader, attack, args, d
             optim_outer.step()
         train_accuracy.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_accuracy.append(accuracy(model, test_loader, device=device, norm=norm_func))
+        sigma_hist.append(model.sigma.detach().cpu().numpy())
         b_hist.append(model.get_b().detach().cpu().numpy())
         lambda2_hist.append(model.get_lambda2().detach().cpu().numpy())
         # Checkpoint current model.
@@ -164,5 +172,6 @@ def meta_train_adv(model, train_loader, val_loader, test_loader, attack, args, d
     # Also save the training and testing curves.
     np.save(os.path.join(args['output_path']['stats'], 'train_acc.npy'), np.array(train_accuracy))
     np.save(os.path.join(args['output_path']['stats'], 'test_acc.npy'), np.array(test_accuracy))
+    np.save(os.path.join(args['output_path']['stats'], 'sigma_hist.npy'), np.array(sigma_hist))
     np.save(os.path.join(args['output_path']['stats'], 'b_hist.npy'), np.array(b_hist))
     np.save(os.path.join(args['output_path']['stats'], 'lambda2_hist.npy'), np.array(lambda2_hist))
