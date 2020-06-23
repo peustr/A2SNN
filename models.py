@@ -27,7 +27,7 @@ class SESNN_ResNet18(nn.Module):
 
     def forward(self, x):
         x = self.gen(x)
-        sigma = f.softplus(self.sigma)
+        sigma = f.softplus(self.sigma - 5.)
         self.dist = Normal(0., sigma)
         x_sample = self.dist.rsample()
         x = x + x_sample
@@ -56,7 +56,7 @@ class MetaSESNN_ResNet18(nn.Module):
 
     def forward(self, x):
         x = self.gen(x)
-        sigma = f.softplus(self.sigma)
+        sigma = f.softplus(self.sigma - 5.)
         self.dist = Normal(0., sigma)
         x_sample = self.dist.rsample()
         x = x + x_sample

@@ -83,7 +83,7 @@ def meta_train_adv(model, train_loader, val_loader, test_loader, attack, args, d
         {'params': model.lambda2},
     ], lr=args['meta_lr'])
     loss_func_inner = nn.CrossEntropyLoss(reduction='mean')
-    loss_func_outer = nn.CrossEntropyLoss(reduction='mean')
+    loss_func_outer = nn.CrossEntropyLoss(reduction='sum')
     if args['dataset'] == 'cifar10':
         norm_func = normalize_cifar10
     else:
@@ -116,7 +116,7 @@ def meta_train_adv(model, train_loader, val_loader, test_loader, attack, args, d
             # Compute the cross-entropy loss for these logits.
             clean_loss_inner = loss_func_inner(logits_clean_inner, target_inner)
             adv_loss_inner = loss_func_inner(logits_adv_inner, target_inner)
-            threshold_inner = model.get_b() + (1 + math.log(2 * math.pi)) / 2
+            threshold_inner = model.get_b() + (1. + math.log(2. * math.pi)) / 2.
             noise_entropy_inner = torch.relu(threshold_inner - model.dist.entropy()).mean()
             # Balance these two losses with weight w, and add the regularization term.
             w = args['adv_loss_w']
@@ -149,7 +149,7 @@ def meta_train_adv(model, train_loader, val_loader, test_loader, attack, args, d
             # Compute the cross-entropy loss for these logits.
             clean_loss_outer = loss_func_outer(logits_clean_outer, target_outer)
             adv_loss_outer = loss_func_outer(logits_adv_outer, target_outer)
-            threshold_outer = model.get_b() + (1 + math.log(2 * math.pi)) / 2
+            threshold_outer = model.get_b() + (1. + math.log(2. * math.pi)) / 2.
             noise_entropy_outer = torch.relu(threshold_outer - model.dist.entropy()).mean()
             # Balance these two losses with weight w, and add the regularization term.
             w = args['adv_loss_w']

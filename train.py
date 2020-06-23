@@ -25,8 +25,8 @@ def main(args):
         device = args['device']
     else:
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    train_loader = get_data_loader(args['dataset'], args['batch_size'], True)
-    test_loader = get_data_loader(args['dataset'], args['batch_size'], False)
+    train_loader = get_data_loader(args['dataset'], args['batch_size'], train=True, shuffle=True, drop_last=True)
+    test_loader = get_data_loader(args['dataset'], args['batch_size'], train=False, shuffle=False, drop_last=False)
     model = model_factory(args['dataset'], args['meta_train'], device=device)
     model.to(device)
     if args['attack'] == 'fgsm':
@@ -40,7 +40,7 @@ def main(args):
         train_adv(model, train_loader, test_loader, attack, args, device=device)
     else:
         print('Adversarial meta-training.')
-        val_loader = get_data_loader(args['dataset'], args['batch_size'], True)
+        val_loader = get_data_loader(args['dataset'], args['batch_size'], train=True, shuffle=True, drop_last=True)
         meta_train_adv(model, train_loader, val_loader, test_loader, attack, args, device=device)
     print('Finished training.')
 
