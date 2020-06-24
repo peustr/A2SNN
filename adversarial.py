@@ -83,7 +83,7 @@ def meta_train_adv(model, train_loader, val_loader, test_loader, attack, args, d
         {'params': model.lambda2},
     ], lr=args['meta_lr'])
     loss_func_inner = nn.CrossEntropyLoss(reduction='mean')
-    loss_func_outer = nn.CrossEntropyLoss(reduction='sum')
+    loss_func_outer = nn.CrossEntropyLoss(reduction='mean')
     if args['dataset'] == 'cifar10':
         norm_func = normalize_cifar10
     else:
