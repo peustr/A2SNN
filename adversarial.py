@@ -11,11 +11,7 @@ from utils import normalize_cifar10
 
 
 def train_adv(model, train_loader, test_loader, attack, args, device='cpu'):
-    optimizer = Adam([
-        {'params': model.gen.parameters()},
-        {'params': model.sigma},
-        {'params': model.proto.parameters()},
-    ], lr=args['lr'])
+    optimizer = Adam(model.parameters(), lr=args['lr'])
     loss_func = nn.CrossEntropyLoss()
     if args['dataset'] == 'cifar10':
         norm_func = normalize_cifar10
