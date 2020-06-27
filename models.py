@@ -43,6 +43,7 @@ class SESNN_ResNet18(nn.Module):
 
 class MetaNet(nn.Module):
     def __init__(self):
+        super().__init__()
         self.b = nn.Parameter(torch.rand(512))
         self.lambda2 = nn.Parameter(torch.rand(1))
 
