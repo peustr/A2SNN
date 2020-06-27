@@ -7,7 +7,7 @@ import torch
 from adversarial import train_adv, meta_train_adv
 from attacks import fgsm, pgd
 from data_loaders import get_data_loader
-from models import model_factory
+from models import MetaNet, model_factory
 
 
 def parse_args():
@@ -27,7 +27,7 @@ def main(args):
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
     train_loader = get_data_loader(args['dataset'], args['batch_size'], train=True, shuffle=True, drop_last=True)
     test_loader = get_data_loader(args['dataset'], args['batch_size'], train=False, shuffle=False, drop_last=False)
-    model = model_factory(args['dataset'], args['meta_train'], device=device)
+    model = model_factory(args['dataset'], args['meta_train'])
     model.to(device)
     if args['attack'] == 'fgsm':
         attack = fgsm
@@ -41,7 +41,9 @@ def main(args):
     else:
         print('Adversarial meta-training.')
         val_loader = get_data_loader(args['dataset'], args['batch_size'], train=True, shuffle=True, drop_last=True)
-        meta_train_adv(model, train_loader, val_loader, test_loader, attack, args, device=device)
+        meta_net = MetaNet()
+        meta_net.to(device)
+        meta_train_adv(model, meta_net, train_loader, val_loader, test_loader, attack, args, device=device)
     print('Finished training.')
 
 

@@ -23,7 +23,7 @@ def main(args):
         device = args['device']
     else:
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    model = model_factory(args['dataset'], args['meta_train'], device=device)
+    model = model_factory(args['dataset'], args['meta_train'])
     model.to(device)
     model.load(os.path.join(args['output_path']['models'], 'ckpt_best'))
     model.eval()
