@@ -21,6 +21,7 @@ def train_adv(model, train_loader, test_loader, attack, args, device='cpu'):
     train_accuracy = []
     test_accuracy = []
     sigma_hist = []
+    early_stopping_cnt = 0
     for epoch in range(args['num_epochs']):
         for data, target in train_loader:
             data = data.to(device)
@@ -60,8 +61,13 @@ def train_adv(model, train_loader, test_loader, attack, args, device='cpu'):
         if test_accuracy[-1] > best_test_acc:
             best_test_acc = test_accuracy[-1]
             model.save(os.path.join(args['output_path']['models'], 'ckpt_best'))
+            early_stopping_cnt = 0
+        else:
+            early_stopping_cnt += 1
         print('Epoch {}\t\tTrain acc: {:.3f}, Test acc: {:.3f}'.format(
             epoch + 1, train_accuracy[-1], test_accuracy[-1]))
+        if early_stopping_cnt == args['early_stopping']:
+            break
     # Also save the training and testing curves.
     np.save(os.path.join(args['output_path']['stats'], 'train_acc.npy'), np.array(train_accuracy))
     np.save(os.path.join(args['output_path']['stats'], 'test_acc.npy'), np.array(test_accuracy))
@@ -81,6 +87,7 @@ def meta_train_adv(model, meta_net, train_loader, val_loader, test_loader, attac
     train_accuracy = []
     test_accuracy = []
     sigma_hist, b_hist, lambda2_hist = [], [], []
+    early_stopping_cnt = 0
     val_iter = iter(val_loader)
     for epoch in range(args['num_epochs']):
         for data_inner, target_inner in train_loader:
@@ -160,8 +167,13 @@ def meta_train_adv(model, meta_net, train_loader, val_loader, test_loader, attac
             best_test_acc = test_accuracy[-1]
             model.save(os.path.join(args['output_path']['models'], 'ckpt_best'))
             meta_net.save(os.path.join(args['output_path']['models'], 'ckpt_meta_best'))
+            early_stopping_cnt = 0
+        else:
+            early_stopping_cnt += 1
         print('Epoch {}\t\tTrain acc: {:.3f}, Test acc: {:.3f}'.format(
             epoch + 1, train_accuracy[-1], test_accuracy[-1]))
+        if early_stopping_cnt == args['early_stopping']:
+            break
     # Also save the training and testing curves.
     np.save(os.path.join(args['output_path']['stats'], 'train_acc.npy'), np.array(train_accuracy))
     np.save(os.path.join(args['output_path']['stats'], 'test_acc.npy'), np.array(test_accuracy))
