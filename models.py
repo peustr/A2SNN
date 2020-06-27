@@ -48,7 +48,7 @@ class MetaNet(nn.Module):
         self.lambda2 = nn.Parameter(torch.rand(1))
 
     def forward(self, x):
-        smooth_threshold = math.log(f.softplus(self.b)) + (1 + math.log(2 * math.pi)) / 2
+        smooth_threshold = f.softplus(self.b) + (1 + math.log(2 * math.pi)) / 2
         aux_loss = torch.relu(smooth_threshold - x['entropy']).mean()
         loss = x['w'] * x['adv_loss'] + (1. - x['w']) * x['clean_loss'] + f.softplus(self.lambda2) * aux_loss
         return loss
