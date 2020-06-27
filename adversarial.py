@@ -150,14 +150,16 @@ def meta_train_adv(model, meta_net, train_loader, val_loader, test_loader, attac
         train_accuracy.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_accuracy.append(accuracy(model, test_loader, device=device, norm=norm_func))
         sigma_hist.append(model.sigma.detach().cpu().numpy())
-        b_hist.append(model.b.detach().cpu().numpy())
-        lambda2_hist.append(model.lambda2.detach().cpu().numpy())
+        b_hist.append(meta_net.b.detach().cpu().numpy())
+        lambda2_hist.append(meta_net.lambda2.detach().cpu().numpy())
         # Checkpoint current model.
         model.save(os.path.join(args['output_path']['models'], 'ckpt'))
+        meta_net.save(os.path.join(args['output_path']['models'], 'ckpt_meta'))
         # Save model with best testing performance.
         if test_accuracy[-1] > best_test_acc:
             best_test_acc = test_accuracy[-1]
             model.save(os.path.join(args['output_path']['models'], 'ckpt_best'))
+            meta_net.save(os.path.join(args['output_path']['models'], 'ckpt_meta_best'))
         print('Epoch {}\t\tTrain acc: {:.3f}, Test acc: {:.3f}'.format(
             epoch + 1, train_accuracy[-1], test_accuracy[-1]))
     # Also save the training and testing curves.
