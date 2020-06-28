@@ -67,6 +67,7 @@ def train_adv(model, train_loader, test_loader, attack, args, device='cpu'):
         print('Epoch {}\t\tTrain acc: {:.3f}, Test acc: {:.3f}'.format(
             epoch + 1, train_accuracy[-1], test_accuracy[-1]))
         if early_stopping_cnt == args['early_stopping']:
+            print("Stopping early at epoch {}.".format(epoch + 1))
             break
     # Also save the training and testing curves.
     np.save(os.path.join(args['output_path']['stats'], 'train_acc.npy'), np.array(train_accuracy))
@@ -173,6 +174,7 @@ def meta_train_adv(model, meta_net, train_loader, val_loader, test_loader, attac
         print('Epoch {}\t\tTrain acc: {:.3f}, Test acc: {:.3f}'.format(
             epoch + 1, train_accuracy[-1], test_accuracy[-1]))
         if early_stopping_cnt == args['early_stopping']:
+            print("Stopping early at epoch {}.".format(epoch + 1))
             break
     # Also save the training and testing curves.
     np.save(os.path.join(args['output_path']['stats'], 'train_acc.npy'), np.array(train_accuracy))
