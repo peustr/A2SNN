@@ -15,6 +15,6 @@
         "stats": "output/stats/meta_sesnn",
         "models": "output/models/meta_sesnn"
     },
-    "early_stopping": 10,
+    "early_stopping": null,
     "mc": 10
 }

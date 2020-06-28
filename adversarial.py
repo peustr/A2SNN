@@ -18,8 +18,7 @@ def train_adv(model, train_loader, test_loader, attack, args, device='cpu'):
     else:
         norm_func = None
     best_test_acc = -1.
-    train_accuracy = []
-    test_accuracy = []
+    train_accuracy, test_accuracy, test_attack_accuracy = [], [], []
     sigma_hist = []
     early_stopping_cnt = 0
     for epoch in range(args['num_epochs']):
@@ -54,6 +53,7 @@ def train_adv(model, train_loader, test_loader, attack, args, device='cpu'):
             optimizer.step()
         train_accuracy.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_accuracy.append(accuracy(model, test_loader, device=device, norm=norm_func))
+        test_attack_accuracy.append(accuracy(model, test_loader, device=device, norm=norm_func, attack=attack))
         sigma_hist.append(model.sigma.detach().cpu().numpy())
         # Checkpoint current model.
         model.save(os.path.join(args['output_path']['models'], 'ckpt'))
@@ -64,14 +64,15 @@ def train_adv(model, train_loader, test_loader, attack, args, device='cpu'):
             early_stopping_cnt = 0
         else:
             early_stopping_cnt += 1
-        print('Epoch {}\t\tTrain acc: {:.3f}, Test acc: {:.3f}'.format(
-            epoch + 1, train_accuracy[-1], test_accuracy[-1]))
+        print('Epoch {}\t\tTrain acc.: {:.3f}, Test acc.: {:.3f}, Test acc. (attack): {:.3f}'.format(
+            epoch + 1, train_accuracy[-1], test_accuracy[-1], test_attack_accuracy[-1]))
         if args['early_stopping'] is not None and early_stopping_cnt == args['early_stopping']:
             print("Stopping early at epoch {}.".format(epoch + 1))
             break
     # Also save the training and testing curves.
     np.save(os.path.join(args['output_path']['stats'], 'train_acc.npy'), np.array(train_accuracy))
     np.save(os.path.join(args['output_path']['stats'], 'test_acc.npy'), np.array(test_accuracy))
+    np.save(os.path.join(args['output_path']['stats'], 'test_acc_atk.npy'), np.array(test_attack_accuracy))
     np.save(os.path.join(args['output_path']['stats'], 'sigma_hist.npy'), np.array(sigma_hist))
 
 
@@ -85,8 +86,7 @@ def meta_train_adv(model, meta_net, train_loader, val_loader, test_loader, attac
     else:
         norm_func = None
     best_test_acc = -1.
-    train_accuracy = []
-    test_accuracy = []
+    train_accuracy, test_accuracy, test_attack_accuracy = [], [], []
     sigma_hist, b_hist, lambda2_hist = [], [], []
     early_stopping_cnt = 0
     val_iter = iter(val_loader)
@@ -157,6 +157,7 @@ def meta_train_adv(model, meta_net, train_loader, val_loader, test_loader, attac
             optim_outer.step()
         train_accuracy.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_accuracy.append(accuracy(model, test_loader, device=device, norm=norm_func))
+        test_attack_accuracy.append(accuracy(model, test_loader, device=device, norm=norm_func, attack=attack))
         sigma_hist.append(model.sigma.detach().cpu().numpy())
         b_hist.append(meta_net.b.detach().cpu().numpy())
         lambda2_hist.append(meta_net.lambda2.detach().cpu().numpy())
@@ -171,14 +172,15 @@ def meta_train_adv(model, meta_net, train_loader, val_loader, test_loader, attac
             early_stopping_cnt = 0
         else:
             early_stopping_cnt += 1
-        print('Epoch {}\t\tTrain acc: {:.3f}, Test acc: {:.3f}'.format(
-            epoch + 1, train_accuracy[-1], test_accuracy[-1]))
+        print('Epoch {}\t\tTrain acc.: {:.3f}, Test acc.: {:.3f}, Test acc. (attack): {:.3f}'.format(
+            epoch + 1, train_accuracy[-1], test_accuracy[-1], test_attack_accuracy[-1]))
         if args['early_stopping'] is not None and early_stopping_cnt == args['early_stopping']:
             print("Stopping early at epoch {}.".format(epoch + 1))
             break
     # Also save the training and testing curves.
     np.save(os.path.join(args['output_path']['stats'], 'train_acc.npy'), np.array(train_accuracy))
     np.save(os.path.join(args['output_path']['stats'], 'test_acc.npy'), np.array(test_accuracy))
+    np.save(os.path.join(args['output_path']['stats'], 'test_acc_atk.npy'), np.array(test_attack_accuracy))
     np.save(os.path.join(args['output_path']['stats'], 'sigma_hist.npy'), np.array(sigma_hist))
     np.save(os.path.join(args['output_path']['stats'], 'b_hist.npy'), np.array(b_hist))
     np.save(os.path.join(args['output_path']['stats'], 'lambda2_hist.npy'), np.array(lambda2_hist))
