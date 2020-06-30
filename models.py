@@ -1,9 +1,6 @@
-import math
-
 import torch
 import torch.nn as nn
-import torch.nn.functional as f
-from torch.distributions.normal import Normal
+from torch.distributions.multivariate_normal import MultivariateNormal
 
 from resnet import resnet18
 
@@ -18,17 +15,43 @@ class GeneratorResNet18(nn.Module):
         return x
 
 
-class SESNN_ResNet18(nn.Module):
-    """ Trainable sigma. """
-    def __init__(self, C):
+class VanillaResNet18(nn.Module):
+    def __init__(self, D, C):
         super().__init__()
         self.gen = GeneratorResNet18()
-        self.sigma = nn.Parameter(torch.rand(512))
-        self.proto = nn.Linear(512, C)
+        self.dim_reduction = nn.Linear(D, C)
+        self.relu = nn.ReLU()
+        self.proto = nn.Linear(D, C)
 
     def forward(self, x):
         x = self.gen(x)
-        self.dist = Normal(0., f.softplus(self.sigma))
+        x = self.relu(self.dim_reduction(x))
+        x = self.proto(x)
+        return x
+
+    def save(self, filename):
+        torch.save(self.state_dict(), filename + ".pt")
+
+    def load(self, filename):
+        self.load_state_dict(torch.load(filename + ".pt"))
+
+
+class SESNN_ResNet18(nn.Module):
+    """ Trainable sigma. """
+    def __init__(self, D, C):
+        super().__init__()
+        self.gen = GeneratorResNet18()
+        self.dim_reduction = nn.Linear(D, C)
+        self.relu = nn.ReLU()
+        self.mu = nn.Parameter(torch.zeros(D), requires_grad=False)
+        self.sigma = nn.Parameter(torch.rand(D, D))
+        self.softplus = nn.Softplus()
+        self.proto = nn.Linear(D, C)
+
+    def forward(self, x):
+        x = self.gen(x)
+        x = self.relu(self.dim_reduction(x))
+        self.dist = MultivariateNormal(self.mu, scale_tril=self.softplus(self.sigma))
         x_sample = self.dist.rsample()
         x = x + x_sample
         x = self.proto(x)
@@ -41,28 +64,12 @@ class SESNN_ResNet18(nn.Module):
         self.load_state_dict(torch.load(filename + ".pt"))
 
 
-class MetaNet(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.b = nn.Parameter(torch.rand(512))
-        self.lambda2 = nn.Parameter(torch.rand(1))
-
-    def forward(self, x):
-        smooth_threshold = f.softplus(self.b) + (1 + math.log(2 * math.pi)) / 2
-        aux_loss = torch.relu(smooth_threshold - x['entropy']).mean()
-        loss = x['w'] * x['adv_loss'] + (1. - x['w']) * x['clean_loss'] + f.softplus(self.lambda2) * aux_loss
-        return loss
-
-    def save(self, filename):
-        torch.save(self.state_dict(), filename + ".pt")
-
-    def load(self, filename):
-        self.load_state_dict(torch.load(filename + ".pt"))
-
-
-def model_factory(dataset, meta_train):
+def model_factory(dataset, training_type, feature_dim):
     if dataset == 'cifar10':
-        model = SESNN_ResNet18(10)
+        if training_type == 'vanilla':
+            model = VanillaResNet18(feature_dim, 10)
+        elif training_type == 'stochastic':
+            model = SESNN_ResNet18(feature_dim, 10)
     else:
         raise NotImplementedError('Model for dataset {} not implemented.'.format(dataset))
     return model
