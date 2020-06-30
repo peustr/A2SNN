@@ -41,7 +41,7 @@ class SESNN_ResNet18(nn.Module):
     def __init__(self, D, C):
         super().__init__()
         self.gen = GeneratorResNet18()
-        self.dim_reduction = nn.Linear(D, C)
+        self.dim_reduction = nn.Linear(512, D)
         self.relu = nn.ReLU()
         self.mu = nn.Parameter(torch.zeros(D), requires_grad=False)
         self.sigma = nn.Parameter(torch.rand(D, D))
