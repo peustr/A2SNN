@@ -5,7 +5,7 @@
     "feature_dim": 32,
     "lr": 0.001,
     "training_type": "stochastic",
-    "reg_weight": 1.0,
+    "reg_weight": 0.8,
     "var_threshold": 16.0,
     "attack": "pgd",
     "epsilon": null,
