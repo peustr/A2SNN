@@ -1,4 +1,4 @@
-import math
+# import math
 import os
 
 import numpy as np
@@ -64,9 +64,13 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
                 data = norm_func(data)
             logits = model(data)
             optimizer.zero_grad()
-            threshold = math.log(args['var_threshold']) + (1 + math.log(2 * math.pi)) / 2
-            noise_entropy = torch.relu(threshold - model.dist.entropy()).mean()
-            loss = loss_func(logits, target) + args['reg_weight'] * noise_entropy
+            # Max entropy regularization.
+            # threshold = math.log(args['var_threshold']) + (1 + math.log(2 * math.pi)) / 2
+            # noise_entropy = torch.relu(threshold - model.dist.entropy()).mean()
+            # loss = loss_func(logits, target) + args['reg_weight'] * noise_entropy
+            # w^T Sigma w regularization.
+            Omega = torch.sum(model.proto.weight.sum(dim=0).T * model.Sigma * model.proto.weight.sum(dim=0))
+            loss = loss_func(logits, target) + args['reg_weight'] * Omega
             loss.backward()
             optimizer.step()
         train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))

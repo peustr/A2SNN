@@ -85,6 +85,11 @@ class SESNN_ResNet18_Multivariate(nn.Module):
         x = self.proto(x)
         return x
 
+    @property
+    def Sigma(self):
+        L = self.softplus(self.L)
+        return L * L.T
+
     def save(self, filename):
         torch.save(self.state_dict(), filename + ".pt")
 
