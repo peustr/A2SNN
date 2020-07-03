@@ -66,16 +66,16 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
             optimizer.zero_grad()
             # Max entropy regularization.
             # threshold = math.log(args['var_threshold']) + (1 + math.log(2 * math.pi)) / 2
-            # noise_entropy = torch.relu(threshold - model.dist.entropy()).mean()
-            # loss = loss_func(logits, target) + args['reg_weight'] * noise_entropy
+            # max_entropy_reg = torch.relu(threshold - model.dist.entropy()).mean()
+            # loss = loss_func(logits, target) + args['reg_weight'] * max_entropy_reg
             # w^T Sigma w regularization.
-            Omega = torch.sum(model.proto.weight.sum(dim=0).T * model.Sigma * model.proto.weight.sum(dim=0))
-            loss = loss_func(logits, target) + args['reg_weight'] * Omega
+            omega = torch.sum(model.proto.weight.sum(dim=0).T * model.sigma * model.proto.weight.sum(dim=0))
+            loss = loss_func(logits, target) + args['reg_weight'] * omega
             loss.backward()
             optimizer.step()
         train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_acc.append(accuracy(model, test_loader, device=device, norm=norm_func))
-        sigma_hist.append(model.Sigma.detach().cpu().numpy())
+        sigma_hist.append(model.sigma.detach().cpu().numpy())
         # Checkpoint current model.
         model.save(os.path.join(args['output_path']['models'], 'ckpt'))
         # Save model with best testing performance.

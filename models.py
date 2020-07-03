@@ -86,7 +86,7 @@ class SESNN_ResNet18_Multivariate(nn.Module):
         return x
 
     @property
-    def Sigma(self):
+    def sigma(self):
         L = self.softplus(self.L)
         return L * L.T
 
