@@ -5,15 +5,15 @@
     "feature_dim": 32,
     "lr": 0.001,
     "training_type": "stochastic",
-    "reg_weight": 0.8,
+    "reg_weight": 0.1,
     "var_threshold": 16.0,
     "attack": "pgd",
     "epsilon": null,
     "adv_loss_weight": 0.5,
     "device": "cuda:0",
     "output_path": {
-        "stats": "output/stats/sesnn",
-        "models": "output/models/sesnn"
+        "stats": "output/stats/sesnn_regw=0.1",
+        "models": "output/models/sesnn_regw=0.1"
     },
     "monte_carlo_runs": 10
 }
