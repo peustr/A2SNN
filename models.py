@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from torch.distributions.multivariate_normal import LowRankMultivariateNormal
+from torch.distributions.lowrank_multivariate_normal import LowRankMultivariateNormal
 
 from resnet import resnet18
 
