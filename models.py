@@ -43,15 +43,18 @@ class SESNN_ResNet18(nn.Module):
         self.gen = GeneratorResNet18()
         self.dim_reduction = nn.Linear(512, D)
         self.relu = nn.ReLU()
-        self.softplus = nn.Softplus()
         self.mu = nn.Parameter(torch.zeros(D), requires_grad=False)
         self.L = nn.Parameter(torch.rand(D, D))
         self.proto = nn.Linear(D, C)
 
+    @property
+    def sigma(self):
+        return self.L * self.L.T
+
     def forward(self, x):
         x = self.gen(x)
         x = self.relu(self.dim_reduction(x))
-        self.dist = MultivariateNormal(self.mu, scale_tril=self.softplus(self.L))
+        self.dist = MultivariateNormal(self.mu, scale_tril=self.L)
         x_sample = self.dist.rsample()
         x = x + x_sample
         x = self.proto(x)

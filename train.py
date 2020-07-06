@@ -64,14 +64,14 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
                 data = norm_func(data)
             logits = model(data)
             optimizer.zero_grad()
-            # wL regularization.
-            omega = (model.proto.weight.sum(dim=0) * model.L).sum(dim=0).mean()
+            # (w^T Sigma w) regularization.
+            omega = (model.proto.weight.sum(dim=0) * model.sigma * model.proto.weight.sum(dim=0)).sum()
             loss = loss_func(logits, target) + args['reg_weight'] * omega
             loss.backward()
             optimizer.step()
         train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_acc.append(accuracy(model, test_loader, device=device, norm=norm_func))
-        sigma_hist.append(model.L.detach().cpu().numpy())
+        sigma_hist.append(model.sigma.detach().cpu().numpy())
         # Checkpoint current model.
         model.save(os.path.join(args['output_path']['models'], 'ckpt'))
         # Save model with best testing performance.
