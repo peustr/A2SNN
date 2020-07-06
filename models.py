@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from torch.distributions.lowrank_multivariate_normal import LowRankMultivariateNormal
+from torch.distributions.multivariate_normal import MultivariateNormal
 
 from resnet import resnet18
 
@@ -45,14 +45,13 @@ class SESNN_ResNet18(nn.Module):
         self.relu = nn.ReLU()
         self.softplus = nn.Softplus()
         self.mu = nn.Parameter(torch.zeros(D), requires_grad=False)
-        self.cov_factor = nn.Parameter(torch.rand(D))
-        self.cov_diag = nn.Parameter(torch.rand(D))
+        self.L = nn.Parameter(torch.rand(D, D))
         self.proto = nn.Linear(D, C)
 
     def forward(self, x):
         x = self.gen(x)
         x = self.relu(self.dim_reduction(x))
-        self.dist = LowRankMultivariateNormal(self.mu, self.cov_factor, self.softplus(self.cov_diag))
+        self.dist = MultivariateNormal(self.mu, scale_tril=self.softplus(self.L))
         x_sample = self.dist.rsample()
         x = x + x_sample
         x = self.proto(x)
