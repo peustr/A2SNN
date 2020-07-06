@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
-from torch.distributions.multivariate_normal import MultivariateNormal
-from torch.distributions.normal import Normal
+from torch.distributions.multivariate_normal import LowRankMultivariateNormal
 
 from resnet import resnet18
 
@@ -37,58 +36,27 @@ class VanillaResNet18(nn.Module):
         self.load_state_dict(torch.load(filename + ".pt"))
 
 
-class SESNN_ResNet18_Diagonal(nn.Module):
-    """ Trainable sigma. """
-    def __init__(self, D, C):
-        super().__init__()
-        self.gen = GeneratorResNet18()
-        self.dim_reduction = nn.Linear(512, D)
-        self.relu = nn.ReLU()
-        self.sigma = nn.Parameter(torch.rand(D))
-        self.softplus = nn.Softplus()
-        self.proto = nn.Linear(D, C)
-
-    def forward(self, x):
-        x = self.gen(x)
-        x = self.relu(self.dim_reduction(x))
-        self.dist = Normal(0., self.softplus(self.sigma))
-        x_sample = self.dist.rsample()
-        x = x + x_sample
-        x = self.proto(x)
-        return x
-
-    def save(self, filename):
-        torch.save(self.state_dict(), filename + ".pt")
-
-    def load(self, filename):
-        self.load_state_dict(torch.load(filename + ".pt"))
-
-
-class SESNN_ResNet18_Multivariate(nn.Module):
+class SESNN_ResNet18(nn.Module):
     """ Trainable triangular matrix L, so Sigma=LL^T. """
     def __init__(self, D, C):
         super().__init__()
         self.gen = GeneratorResNet18()
         self.dim_reduction = nn.Linear(512, D)
         self.relu = nn.ReLU()
-        self.mu = nn.Parameter(torch.zeros(D), requires_grad=False)
-        self.L = nn.Parameter(torch.rand(D, D))
         self.softplus = nn.Softplus()
+        self.mu = nn.Parameter(torch.zeros(D), requires_grad=False)
+        self.cov_factor = nn.Parameter(torch.rand(D))
+        self.cov_diag = nn.Parameter(torch.rand(D))
         self.proto = nn.Linear(D, C)
 
     def forward(self, x):
         x = self.gen(x)
         x = self.relu(self.dim_reduction(x))
-        self.dist = MultivariateNormal(self.mu, scale_tril=self.softplus(self.L))
+        self.dist = LowRankMultivariateNormal(self.mu, self.cov_factor, self.softplus(self.cov_diag))
         x_sample = self.dist.rsample()
         x = x + x_sample
         x = self.proto(x)
         return x
-
-    @property
-    def sigma(self):
-        L = self.softplus(self.L)
-        return L * L.T
 
     def save(self, filename):
         torch.save(self.state_dict(), filename + ".pt")
@@ -102,7 +70,7 @@ def model_factory(dataset, training_type, feature_dim):
         if training_type == 'vanilla':
             model = VanillaResNet18(feature_dim, 10)
         elif training_type == 'stochastic':
-            model = SESNN_ResNet18_Multivariate(feature_dim, 10)
+            model = SESNN_ResNet18(feature_dim, 10)
     else:
         raise NotImplementedError('Model for dataset {} not implemented.'.format(dataset))
     return model
