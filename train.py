@@ -46,7 +46,10 @@ def train_vanilla(model, train_loader, test_loader, args, device='cpu'):
 
 
 def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
-    optimizer = Adam(model.parameters(), lr=args['lr'])
+    optimizer = Adam([
+        {'params': model.base.parameters()},
+        {'params': model.proto.parameters(), 'weight_decay': 0.01}
+    ], lr=args['lr'])
     loss_func = nn.CrossEntropyLoss()
     if args['dataset'] == 'cifar10':
         norm_func = normalize_cifar10
@@ -65,8 +68,7 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
             logits = model(data)
             optimizer.zero_grad()
             # (w^T Sigma w) regularization.
-            omega = (model.proto.weight.sum(dim=0) * model.sigma * model.proto.weight.sum(dim=0)).sum()
-            loss = loss_func(logits, target) + args['reg_weight'] * omega
+            loss = loss_func(logits, target) + args['reg_weight'] * calculate_reg_term(model, args)
             loss.backward()
             optimizer.step()
         train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))
@@ -83,3 +85,14 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
     np.save(os.path.join(args['output_path']['stats'], 'train_acc.npy'), np.array(train_acc))
     np.save(os.path.join(args['output_path']['stats'], 'test_acc.npy'), np.array(test_acc))
     np.save(os.path.join(args['output_path']['stats'], 'sigma_hist.npy'), np.array(sigma_hist))
+
+
+def calculate_reg_term(model, args):
+    if args['dataset'] == 'cifar10':
+        out_dim = 10
+    else:
+        raise NotImplementedError('Dataset not supported.')
+    omega = torch.empty(out_dim)
+    for i in range(out_dim):
+        omega[i] = model.proto.weight[i].T @ model.sigma @ model.proto.weight[i]
+    return omega.sum()

@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as f
 from torch.distributions.multivariate_normal import MultivariateNormal
 
 from resnet import resnet18
@@ -36,27 +37,36 @@ class VanillaResNet18(nn.Module):
         self.load_state_dict(torch.load(filename + ".pt"))
 
 
-class SESNN_ResNet18(nn.Module):
+class ResNet18_StochasticBase(nn.Module):
     """ Trainable triangular matrix L, so Sigma=LL^T. """
-    def __init__(self, D, C):
+    def __init__(self, D):
         super().__init__()
         self.gen = GeneratorResNet18()
         self.dim_reduction = nn.Linear(512, D)
-        self.relu = nn.ReLU()
         self.mu = nn.Parameter(torch.zeros(D), requires_grad=False)
         self.L = nn.Parameter(torch.rand(D, D))
+
+    def forward(self, x):
+        x = self.gen(x)
+        x = f.relu(self.dim_reduction(x))
+        self.dist = MultivariateNormal(self.mu, scale_tril=self.L)
+        x_sample = self.dist.rsample()
+        x = x + x_sample
+        return x
+
+
+class SESNN_ResNet18(nn.Module):
+    def __init__(self, D, C):
+        super().__init__()
+        self.base = ResNet18_StochasticBase(D)
         self.proto = nn.Linear(D, C)
 
     @property
     def sigma(self):
-        return self.L * self.L.T
+        return self.base.L @ self.base.L.T
 
     def forward(self, x):
-        x = self.gen(x)
-        x = self.relu(self.dim_reduction(x))
-        self.dist = MultivariateNormal(self.mu, scale_tril=self.L)
-        x_sample = self.dist.rsample()
-        x = x + x_sample
+        x = self.base(x)
         x = self.proto(x)
         return x
 
