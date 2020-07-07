@@ -68,7 +68,7 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
             logits = model(data)
             optimizer.zero_grad()
             # (w^T Sigma w) regularization.
-            loss = loss_func(logits, target) + args['reg_weight'] * calculate_reg_term(model, args)
+            loss = loss_func(logits, target) + args['reg_weight'] * calculate_reg_term(model, args, device)
             loss.backward()
             optimizer.step()
         train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))
@@ -87,12 +87,12 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
     np.save(os.path.join(args['output_path']['stats'], 'sigma_hist.npy'), np.array(sigma_hist))
 
 
-def calculate_reg_term(model, args):
+def calculate_reg_term(model, args, device='cpu'):
     if args['dataset'] == 'cifar10':
         out_dim = 10
     else:
         raise NotImplementedError('Dataset not supported.')
-    omega = torch.empty(out_dim)
+    omega = torch.empty(out_dim).to(device)
     for i in range(out_dim):
         omega[i] = model.proto.weight[i].T @ model.sigma @ model.proto.weight[i]
     return omega.sum()
