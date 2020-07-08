@@ -75,7 +75,7 @@ class StochasticBase(nn.Module):
     """ Trainable triangular matrix L, so Sigma=LL^T. """
     def __init__(self, D):
         super().__init__()
-        self.gen = Generator()
+        self.gen = Generator(D)
         self.mu = nn.Parameter(torch.zeros(D), requires_grad=False)
         self.L = nn.Parameter(torch.rand(D, D))
 
