@@ -36,7 +36,7 @@ class GeneratorResNet18(nn.Module):
 class VanillaNet(nn.Module):
     def __init__(self, D, C):
         super().__init__()
-        self.gen = Generator()
+        self.gen = Generator(D)
         self.proto = nn.Linear(D, C)
 
     def forward(self, x):
