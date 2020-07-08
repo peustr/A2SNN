@@ -5,6 +5,7 @@
     "feature_dim": 32,
     "lr": 0.001,
     "training_type": "stochastic",
+    "var_type": "full_rank",
     "reg_type": "wSw",
     "reg_weight": 0.8,
     "var_threshold": 16.0,

@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as f
 from torch.distributions.multivariate_normal import MultivariateNormal
+from torch.distributions.normal import Normal
 
 from resnet import resnet18
 
@@ -71,13 +72,32 @@ class VanillaResNet18(nn.Module):
         self.load_state_dict(torch.load(filename + ".pt"))
 
 
-class StochasticBase(nn.Module):
+class StochasticBaseDiagonal(nn.Module):
+    """ Zero mean, trainable variance. """
+    def __init__(self, D):
+        super().__init__()
+        self.gen = Generator(D)
+        self.sigma = nn.Parameter(torch.rand(D))
+
+    def forward(self, x):
+        x = self.gen(x)
+        self.dist = Normal(0., f.softplus(self.sigma))
+        x_sample = self.dist.rsample()
+        x = x + x_sample
+        return x
+
+
+class StochasticBaseMultivariate(nn.Module):
     """ Trainable triangular matrix L, so Sigma=LL^T. """
     def __init__(self, D):
         super().__init__()
         self.gen = Generator(D)
         self.mu = nn.Parameter(torch.zeros(D), requires_grad=False)
         self.L = nn.Parameter(torch.rand(D, D))
+
+    @property
+    def sigma(self):
+        return self.L @ self.L.T
 
     def forward(self, x):
         x = self.gen(x)
@@ -87,7 +107,24 @@ class StochasticBase(nn.Module):
         return x
 
 
-class ResNet18_StochasticBase(nn.Module):
+class ResNet18_StochasticBaseDiagonal(nn.Module):
+    """ Zero mean, trainable variance. """
+    def __init__(self, D):
+        super().__init__()
+        self.gen = GeneratorResNet18()
+        self.fc1 = nn.Linear(512, D)
+        self.sigma = nn.Parameter(torch.rand(D))
+
+    def forward(self, x):
+        x = self.gen(x)
+        x = f.relu(self.fc1(x))
+        self.dist = Normal(0., f.softplus(self.sigma))
+        x_sample = self.dist.rsample()
+        x = x + x_sample
+        return x
+
+
+class ResNet18_StochasticBaseMultivariate(nn.Module):
     """ Trainable triangular matrix L, so Sigma=LL^T. """
     def __init__(self, D):
         super().__init__()
@@ -95,6 +132,10 @@ class ResNet18_StochasticBase(nn.Module):
         self.fc1 = nn.Linear(512, D)
         self.mu = nn.Parameter(torch.zeros(D), requires_grad=False)
         self.L = nn.Parameter(torch.rand(D, D))
+
+    @property
+    def sigma(self):
+        return self.L @ self.L.T
 
     def forward(self, x):
         x = self.gen(x)
@@ -106,14 +147,17 @@ class ResNet18_StochasticBase(nn.Module):
 
 
 class SESNN_CNN(nn.Module):
-    def __init__(self, D, C):
+    def __init__(self, D, C, variance_type):
         super().__init__()
-        self.base = StochasticBase(D)
+        if variance_type == 'full_rank':
+            self.base = StochasticBaseMultivariate(D)
+        else:
+            self.base = StochasticBaseDiagonal(D)
         self.proto = nn.Linear(D, C)
 
     @property
     def sigma(self):
-        return self.base.L @ self.base.L.T
+        return self.base.sigma
 
     def forward(self, x):
         x = self.base(x)
@@ -128,14 +172,17 @@ class SESNN_CNN(nn.Module):
 
 
 class SESNN_ResNet18(nn.Module):
-    def __init__(self, D, C):
+    def __init__(self, D, C, variance_type):
         super().__init__()
-        self.base = ResNet18_StochasticBase(D)
+        if variance_type == 'full_rank':
+            self.base = ResNet18_StochasticBaseMultivariate(D)
+        else:
+            self.base = ResNet18_StochasticBaseDiagonal(D)
         self.proto = nn.Linear(D, C)
 
     @property
     def sigma(self):
-        return self.base.L @ self.base.L.T
+        return self.base.sigma
 
     def forward(self, x):
         x = self.base(x)
@@ -149,17 +196,19 @@ class SESNN_ResNet18(nn.Module):
         self.load_state_dict(torch.load(filename + ".pt"))
 
 
-def model_factory(dataset, training_type, feature_dim):
+def model_factory(dataset, training_type, variance_type, feature_dim):
+    if variance_type not in ('diagonal', 'full_rank'):
+        raise NotImplementedError('Only "diagonal" and "full_rank" variance types supported.')
     if dataset == 'mnist':
         if training_type == 'vanilla':
             model = VanillaNet(feature_dim, 10)
         elif training_type == 'stochastic':
-            model = SESNN_CNN(feature_dim, 10)
+            model = SESNN_CNN(feature_dim, 10, variance_type)
     elif dataset == 'cifar10':
         if training_type == 'vanilla':
             model = VanillaResNet18(feature_dim, 10)
         elif training_type == 'stochastic':
-            model = SESNN_ResNet18(feature_dim, 10)
+            model = SESNN_ResNet18(feature_dim, 10, variance_type)
     else:
         raise NotImplementedError('Model for dataset {} not implemented.'.format(dataset))
     return model

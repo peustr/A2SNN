@@ -27,7 +27,7 @@ def train(args, device):
     os.makedirs(args['output_path']['models'], exist_ok=True)
     train_loader = get_data_loader(args['dataset'], args['batch_size'], train=True, shuffle=True, drop_last=True)
     test_loader = get_data_loader(args['dataset'], args['batch_size'], train=False, shuffle=False, drop_last=False)
-    model = model_factory(args['dataset'], args['training_type'], args['feature_dim'])
+    model = model_factory(args['dataset'], args['training_type'], args['var_type'], args['feature_dim'])
     model.to(device)
     if args['training_type'] == 'vanilla':
         print('Vanilla training.')
@@ -44,7 +44,7 @@ def train(args, device):
 def test(args, device):
     print(args)
     for model_id in ('ckpt', 'ckpt_best'):
-        model = model_factory(args['dataset'], args['training_type'], args['feature_dim'])
+        model = model_factory(args['dataset'], args['training_type'], args['var_type'], args['feature_dim'])
         model.to(device)
         model.load(os.path.join(args['output_path']['models'], model_id))
         model.eval()
