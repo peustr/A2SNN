@@ -1,4 +1,4 @@
-# import math
+import math
 import os
 
 import numpy as np
@@ -68,9 +68,16 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
             logits = model(data)
             optimizer.zero_grad()
             # (w^T Sigma w) regularization.
-            loss = loss_func(logits, target) + args['reg_weight'] * calculate_reg_term(model, args, device)
-            loss.backward()
-            optimizer.step()
+            if args['reg_type'] == 'wSw':
+                loss = loss_func(logits, target) + args['reg_weight'] * calculate_wSw_reg_term(model, args, device)
+            elif args['reg_type'] == 'max_ent':
+                threshold = math.log(args['var_threshold']) + (1 + math.log(2 * math.pi)) / 2
+                entropy_loss = torch.relu(threshold - model.base.dist.entropy()).mean()
+                loss = loss_func(logits, target) + args['reg_weight'] * entropy_loss
+            else:
+                raise NotImplementedError('Regularization "{}" not supported.'.format(args['reg_type']))
+        loss.backward()
+        optimizer.step()
         train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_acc.append(accuracy(model, test_loader, device=device, norm=norm_func))
         sigma_hist.append(model.sigma.detach().cpu().numpy())
@@ -87,7 +94,7 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
     np.save(os.path.join(args['output_path']['stats'], 'sigma_hist.npy'), np.array(sigma_hist))
 
 
-def calculate_reg_term(model, args, device='cpu'):
+def calculate_wSw_reg_term(model, args, device='cpu'):
     if args['dataset'] == 'cifar10' or args['dataset'] == 'mnist':
         out_dim = 10
     else:
