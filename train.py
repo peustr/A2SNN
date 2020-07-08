@@ -88,7 +88,7 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
 
 
 def calculate_reg_term(model, args, device='cpu'):
-    if args['dataset'] == 'cifar10':
+    if args['dataset'] == 'cifar10' or args['dataset'] == 'mnist':
         out_dim = 10
     else:
         raise NotImplementedError('Dataset not supported.')
