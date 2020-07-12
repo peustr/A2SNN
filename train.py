@@ -76,8 +76,8 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
                 loss = loss_func(logits, target) + args['reg_weight'] * entropy_loss
             else:
                 raise NotImplementedError('Regularization "{}" not supported.'.format(args['reg_type']))
-        loss.backward()
-        optimizer.step()
+            loss.backward()
+            optimizer.step()
         train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_acc.append(accuracy(model, test_loader, device=device, norm=norm_func))
         sigma_hist.append(model.sigma.detach().cpu().numpy())
