@@ -46,6 +46,7 @@ def train_vanilla(model, train_loader, test_loader, args, device='cpu'):
 
 
 def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
+    # optimizer = Adam(model.parameters(), lr=args['lr'])
     optimizer = Adam([
         {'params': model.base.parameters()},
         {'params': model.proto.parameters(), 'weight_decay': 0.01}
