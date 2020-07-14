@@ -13,7 +13,7 @@ attack_mapping = {
 
 def test_attack(model, data_loader, attack_name, epsilon_values, args, device='cpu'):
     model.eval()
-    attack_model = attack_mapping['attack']
+    attack_model = attack_mapping[attack_name]
     if args['dataset'] == 'mnist':
         preprocessing = None
     elif args['dataset'] == 'cifar10':
