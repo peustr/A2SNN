@@ -7,6 +7,7 @@ import torch.nn as nn
 from torch.optim import Adam
 
 from metrics import accuracy
+from test import test_attack
 from utils import normalize_cifar10
 
 
@@ -56,8 +57,8 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
         norm_func = normalize_cifar10
     else:
         norm_func = None
-    best_test_acc = -1.
-    train_acc, test_acc = [], []
+    best_test_acc, best_test_acc_atk = -1., -1.
+    train_acc, test_acc, test_acc_atk = [], [], []
     sigma_hist = []
     for epoch in range(args['num_epochs']):
         for data, target in train_loader:
@@ -81,6 +82,8 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
             optimizer.step()
         train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_acc.append(accuracy(model, test_loader, device=device, norm=norm_func))
+        test_acc_atk.append(
+            test_attack(model, test_loader, 'FGSM', [0.1, 0.2, 0.3, 0.4, 0.5], args, device).mean().item())
         sigma_hist.append(model.sigma.detach().cpu().numpy())
         # Checkpoint current model.
         model.save(os.path.join(args['output_path']['models'], 'ckpt'))
@@ -88,10 +91,15 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
         if test_acc[-1] > best_test_acc:
             best_test_acc = test_acc[-1]
             model.save(os.path.join(args['output_path']['models'], 'ckpt_best'))
-        print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}'.format(epoch + 1, train_acc[-1], test_acc[-1]))
+        if test_acc_atk[-1] > best_test_acc_atk:
+            best_test_acc_atk = test_acc_atk[-1]
+            model.save(os.path.join(args['output_path']['models'], 'ckpt_robust'))
+        print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}, Test adv. acc: {:.3f}'.format(
+            epoch + 1, train_acc[-1], test_acc[-1], test_acc_atk[-1]))
     # Also save the training and testing curves.
     np.save(os.path.join(args['output_path']['stats'], 'train_acc.npy'), np.array(train_acc))
     np.save(os.path.join(args['output_path']['stats'], 'test_acc.npy'), np.array(test_acc))
+    np.save(os.path.join(args['output_path']['stats'], 'test_acc_atk.npy'), np.array(test_acc_atk))
     np.save(os.path.join(args['output_path']['stats'], 'sigma_hist.npy'), np.array(sigma_hist))
 
 
