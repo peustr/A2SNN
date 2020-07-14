@@ -5,9 +5,9 @@ from foolbox.attacks import FGSMMC, PGDMC, BIMMC
 
 
 attack_mapping = {
-    'FGSM': FGSMMC,
-    'PGD': PGDMC,
-    'BIM': BIMMC,
+    'FGSM': FGSMMC(),
+    'PGD': PGDMC(rel_stepsize=0.1, steps=10),
+    'BIM': BIMMC(rel_stepsize=0.1),
 }
 
 
