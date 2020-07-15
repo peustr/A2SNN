@@ -55,8 +55,10 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
     loss_func = nn.CrossEntropyLoss()
     if args['dataset'] == 'cifar10':
         norm_func = normalize_cifar10
-    else:
+        eps_values = [0. / 255, 1. / 255, 2. / 255, 4. / 255, 8. / 255, 16. / 255, 32. / 255, 64. / 255, 128. / 255]
+    elif args['dataset'] == 'mnist':
         norm_func = None
+        eps_values = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
     best_test_acc, best_test_acc_atk = -1., -1.
     train_acc, test_acc, test_acc_atk = [], [], []
     sigma_hist = []
@@ -82,8 +84,7 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
             optimizer.step()
         train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_acc.append(accuracy(model, test_loader, device=device, norm=norm_func))
-        test_acc_atk.append(
-            test_attack(model, test_loader, 'FGSM', [0.1, 0.2, 0.3, 0.4, 0.5], args, device).mean().item())
+        test_acc_atk.append(test_attack(model, test_loader, 'FGSM', eps_values, args, device).mean().item())
         sigma_hist.append(model.sigma.detach().cpu().numpy())
         # Checkpoint current model.
         model.save(os.path.join(args['output_path']['models'], 'ckpt'))
