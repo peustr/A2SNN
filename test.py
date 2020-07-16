@@ -11,9 +11,9 @@ def get_attack_mapping(args):
     elif args['dataset'] == 'cifar10':
         steps = 7
     return {
-        'FGSM': FGSMMC(),
-        'PGD': PGDMC(rel_stepsize=lr, steps=steps),
-        'BIM': BIMMC(rel_stepsize=lr, steps=steps),
+        'FGSM': FGSMMC(abs_stepsize=lr),
+        'PGD': PGDMC(abs_stepsize=lr, steps=steps),
+        'BIM': BIMMC(abs_stepsize=lr, steps=steps),
     }
 
 
