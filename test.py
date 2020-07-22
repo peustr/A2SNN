@@ -4,22 +4,21 @@ from foolbox import PyTorchModel
 from foolbox.attacks import FGSMMC, PGDMC, BIMMC
 
 
-def get_attack_mapping(args):
-    lr = args['lr']
-    if args['dataset'] == 'mnist':
+def get_attack_mapping(dataset):
+    if dataset == 'mnist':
         steps = 40
-    elif args['dataset'] == 'cifar10':
+    elif dataset == 'cifar10':
         steps = 7
     return {
         'FGSM': FGSMMC(),
-        'PGD': PGDMC(abs_stepsize=lr, steps=steps),
-        'BIM': BIMMC(abs_stepsize=lr, steps=steps),
+        'PGD': PGDMC(rel_stepsize=3e-2, steps=steps),
+        'BIM': BIMMC(rel_stepsize=2e-1, steps=steps),
     }
 
 
 def test_attack(model, data_loader, attack_name, epsilon_values, args, device='cpu'):
     model.eval()
-    attack_model = get_attack_mapping(args)[attack_name]
+    attack_model = get_attack_mapping(args['dataset'])[attack_name]
     if args['dataset'] == 'mnist':
         preprocessing = None
     elif args['dataset'] == 'cifar10':
