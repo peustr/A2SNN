@@ -73,7 +73,8 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
             optimizer.zero_grad()
             # (w^T Sigma w) regularization.
             if args['reg_type'] == 'wSw':
-                loss = loss_func(logits, target) + args['reg_weight'] * calculate_wSw_reg_term(model, args, device)
+                omega = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
+                loss = loss_func(logits, target) + args['reg_weight'] * omega
             elif args['reg_type'] == 'max_ent':
                 threshold = math.log(args['var_threshold']) + (1 + math.log(2 * math.pi)) / 2
                 entropy_loss = torch.relu(threshold - model.base.dist.entropy()).mean()
@@ -102,14 +103,3 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
     np.save(os.path.join(args['output_path']['stats'], 'test_acc.npy'), np.array(test_acc))
     np.save(os.path.join(args['output_path']['stats'], 'test_acc_atk.npy'), np.array(test_acc_atk))
     np.save(os.path.join(args['output_path']['stats'], 'sigma_hist.npy'), np.array(sigma_hist))
-
-
-def calculate_wSw_reg_term(model, args, device='cpu'):
-    if args['dataset'] == 'cifar10' or args['dataset'] == 'mnist':
-        out_dim = 10
-    else:
-        raise NotImplementedError('Dataset not supported.')
-    omega = torch.empty(out_dim).to(device)
-    for i in range(out_dim):
-        omega[i] = model.proto.weight[i].T @ model.sigma @ model.proto.weight[i]
-    return omega.sum()
