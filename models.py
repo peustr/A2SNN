@@ -97,11 +97,11 @@ class StochasticBaseMultivariate(nn.Module):
 
     @property
     def sigma(self):
-        return self.L @ self.L.T
+        return self.L.tril() @ self.L.tril().T
 
     def forward(self, x):
         x = self.gen(x)
-        self.dist = MultivariateNormal(self.mu, scale_tril=self.L)
+        self.dist = MultivariateNormal(self.mu, scale_tril=self.L.tril())
         x_sample = self.dist.rsample()
         x = x + x_sample
         return x
@@ -135,12 +135,12 @@ class ResNet18_StochasticBaseMultivariate(nn.Module):
 
     @property
     def sigma(self):
-        return self.L @ self.L.T
+        return self.L.tril() @ self.L.tril().T
 
     def forward(self, x):
         x = self.gen(x)
         x = f.relu(self.fc1(x))
-        self.dist = MultivariateNormal(self.mu, scale_tril=self.L)
+        self.dist = MultivariateNormal(self.mu, scale_tril=self.L.tril())
         x_sample = self.dist.rsample()
         x = x + x_sample
         return x
