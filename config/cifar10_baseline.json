@@ -1,5 +1,6 @@
 {
     "dataset": "cifar10",
+    "pretrained": null,
     "batch_size": 128,
     "num_epochs": 200,
     "feature_dim": 32,

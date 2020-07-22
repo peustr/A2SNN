@@ -28,6 +28,10 @@ def train(args, device):
     test_loader = get_data_loader(args['dataset'], args['batch_size'], train=False, shuffle=False, drop_last=False)
     model = model_factory(args['dataset'], args['training_type'], args['var_type'], args['feature_dim'])
     model.to(device)
+    if args['pretrained'] is not None:
+        if args['pretrained'] not in ('ckpt', 'ckpt_last', 'ckpt_robust'):
+            raise ValueError()
+        model.load(os.path.join(args['output_path']['models'], args['pretrained']))
     if args['training_type'] == 'vanilla':
         print('Vanilla training.')
         train_vanilla(model, train_loader, test_loader, args, device=device)
