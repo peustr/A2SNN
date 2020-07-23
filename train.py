@@ -70,7 +70,7 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
             if args['reg_type'] == 'wSw':
                 # Force w to have unit norm (so it doesn't explode).
                 with torch.no_grad():
-                    model.proto.weight = model.proto.weight / model.proto.weight.norm()
+                    model.proto.weight.data = model.proto.weight / model.proto.weight.norm()
                 omega = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
                 loss = loss_func(logits, target) + args['reg_weight'] * omega
             elif args['reg_type'] == 'max_ent':
