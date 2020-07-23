@@ -47,11 +47,7 @@ def train_vanilla(model, train_loader, test_loader, args, device='cpu'):
 
 
 def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
-    # optimizer = Adam(model.parameters(), lr=args['lr'])
-    optimizer = Adam([
-        {'params': model.base.parameters()},
-        {'params': model.proto.parameters(), 'weight_decay': 0.1}
-    ], lr=args['lr'])
+    optimizer = Adam(model.parameters(), lr=args['lr'])
     loss_func = nn.CrossEntropyLoss()
     if args['dataset'] == 'cifar10':
         norm_func = normalize_cifar10
@@ -72,6 +68,9 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
             optimizer.zero_grad()
             # (w^T Sigma w) regularization.
             if args['reg_type'] == 'wSw':
+                # Force w to have unit norm (so it doesn't explode).
+                with torch.no_grad():
+                    model.proto.weight = model.proto.weight / model.proto.weight.norm()
                 omega = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
                 loss = loss_func(logits, target) + args['reg_weight'] * omega
             elif args['reg_type'] == 'max_ent':
