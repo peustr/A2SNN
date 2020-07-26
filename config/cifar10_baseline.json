@@ -4,7 +4,11 @@
     "batch_size": 128,
     "num_epochs": 200,
     "feature_dim": 32,
-    "lr": 0.01,
+    "lr": 0.1,
+    "lr_scheduler": {
+        "trigger_epochs": [50, 100, 150],
+        "decay_factor": 0.1
+    },
     "training_type": "stochastic",
     "var_type": "full_rank",
     "reg_type": "wSw",
@@ -15,8 +19,8 @@
     "adv_loss_weight": 0.5,
     "device": "cuda:0",
     "output_path": {
-        "stats": "output/stats/sesnn_cifar10_b3_lr_0.01_regw_2.0",
-        "models": "output/models/sesnn_cifar10_b3_lr_0.01_regw_2.0"
+        "stats": "output/stats/sesnn_cifar10_b3_lr_0.1_regw_2.0",
+        "models": "output/models/sesnn_cifar10_b3_lr_0.1_regw_2.0"
     },
     "monte_carlo_runs": 10
 }

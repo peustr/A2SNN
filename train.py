@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.optim import Adam
+from torch.optim.lr_scheduler import MultiStepLR
 
 from metrics import accuracy
 from utils import normalize_cifar10
@@ -47,7 +48,12 @@ def train_vanilla(model, train_loader, test_loader, args, device='cpu'):
 
 
 def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
-    optimizer = Adam(model.parameters(), lr=args['lr'])
+    _optim = Adam(model.parameters(), lr=args['lr'])
+    if args["lr_scheduler"] is not None:
+        optimizer = MultiStepLR(
+            _optim, args["lr_scheduler"]["trigger_epochs"], gamma=args["lr_scheduler"]["decay_factor"])
+    else:
+        optimizer = _optim
     loss_func = nn.CrossEntropyLoss()
     if args['dataset'] == 'cifar10':
         norm_func = normalize_cifar10
