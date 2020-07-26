@@ -84,12 +84,12 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
                 raise NotImplementedError('Regularization "{}" not supported.'.format(args['reg_type']))
             loss.backward()
             optimizer.step()
-            if scheduler is not None:
-                scheduler.step()
             # For (w^T Sigma w) regularization, force w to have unit norm (so it doesn't explode).
             if args['reg_type'] == 'wSw':
                 with torch.no_grad():
                     model.proto.weight.data = model.proto.weight / model.proto.weight.norm()
+        if scheduler is not None:
+            scheduler.step()
         train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_acc.append(accuracy(model, test_loader, device=device, norm=norm_func))
         sigma_hist.append(model.sigma.detach().cpu().numpy())
