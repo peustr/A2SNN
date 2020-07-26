@@ -48,12 +48,12 @@ def train_vanilla(model, train_loader, test_loader, args, device='cpu'):
 
 
 def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
-    _optim = Adam(model.parameters(), lr=args['lr'])
+    optimizer = Adam(model.parameters(), lr=args['lr'])
     if args["lr_scheduler"] is not None:
-        optimizer = MultiStepLR(
-            _optim, args["lr_scheduler"]["trigger_epochs"], gamma=args["lr_scheduler"]["decay_factor"])
+        scheduler = MultiStepLR(
+            optimizer, args["lr_scheduler"]["trigger_epochs"], gamma=args["lr_scheduler"]["decay_factor"])
     else:
-        optimizer = _optim
+        scheduler = None
     loss_func = nn.CrossEntropyLoss()
     if args['dataset'] == 'cifar10':
         norm_func = normalize_cifar10
@@ -84,6 +84,8 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
                 raise NotImplementedError('Regularization "{}" not supported.'.format(args['reg_type']))
             loss.backward()
             optimizer.step()
+            if scheduler is not None:
+                scheduler.step()
             # For (w^T Sigma w) regularization, force w to have unit norm (so it doesn't explode).
             if args['reg_type'] == 'wSw':
                 with torch.no_grad():
