@@ -48,10 +48,14 @@ def train_vanilla(model, train_loader, test_loader, args, device='cpu'):
 
 
 def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
-    optimizer = Adam(model.parameters(), lr=args['lr'])
-    if args["lr_scheduler"] is not None:
+    # optimizer = Adam(model.parameters(), lr=args['lr'])
+    optimizer = Adam([
+        {'params': model.base.parameters()},
+        {'params': model.proto.parameters(), 'weight_decay': args['wd']}
+    ], lr=args['lr'])
+    if args['lr_scheduler'] is not None:
         scheduler = MultiStepLR(
-            optimizer, args["lr_scheduler"]["trigger_epochs"], gamma=args["lr_scheduler"]["decay_factor"])
+            optimizer, args['lr_scheduler']['trigger_epochs'], gamma=args['lr_scheduler']['decay_factor'])
     else:
         scheduler = None
     loss_func = nn.CrossEntropyLoss()
@@ -85,9 +89,10 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
             loss.backward()
             optimizer.step()
             # For (w^T Sigma w) regularization, force w to have unit norm (so it doesn't explode).
-            if args['reg_type'] == 'wSw':
-                with torch.no_grad():
-                    model.proto.weight.data = model.proto.weight / model.proto.weight.norm()
+            # Comment out if using weight decay.
+            # if args['reg_type'] == 'wSw':
+            #     with torch.no_grad():
+            #         model.proto.weight.data = model.proto.weight / model.proto.weight.norm()
         if scheduler is not None:
             scheduler.step()
         train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))
