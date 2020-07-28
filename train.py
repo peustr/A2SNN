@@ -48,11 +48,12 @@ def train_vanilla(model, train_loader, test_loader, args, device='cpu'):
 
 
 def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
-    # optimizer = Adam(model.parameters(), lr=args['lr'])
-    optimizer = Adam([
-        {'params': model.base.parameters()},
-        {'params': model.proto.parameters(), 'weight_decay': args['wd']}
-    ], lr=args['lr'])
+    optimizer = Adam(model.parameters(), lr=args['lr'])
+    # Comment out if using the w = w / w.norm() projection.
+    # optimizer = Adam([
+    #     {'params': model.base.parameters()},
+    #     {'params': model.proto.parameters(), 'weight_decay': args['wd']}
+    # ], lr=args['lr'])
     if args['lr_scheduler'] is not None:
         scheduler = MultiStepLR(
             optimizer, args['lr_scheduler']['trigger_epochs'], gamma=args['lr_scheduler']['decay_factor'])
@@ -79,7 +80,7 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
             # (w^T Sigma w) regularization.
             if args['reg_type'] == 'wSw':
                 omega = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
-                loss = loss_func(logits, target) + args['reg_weight'] * omega
+                loss = loss_func(logits, target) - args['reg_weight'] * omega
             elif args['reg_type'] == 'max_ent':
                 threshold = math.log(args['var_threshold']) + (1 + math.log(2 * math.pi)) / 2
                 entropy_loss = torch.relu(threshold - model.base.dist.entropy()).mean()
@@ -90,9 +91,9 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
             optimizer.step()
             # For (w^T Sigma w) regularization, force w to have unit norm (so it doesn't explode).
             # Comment out if using weight decay.
-            # if args['reg_type'] == 'wSw':
-            #     with torch.no_grad():
-            #         model.proto.weight.data = model.proto.weight / model.proto.weight.norm()
+            if args['reg_type'] == 'wSw':
+                with torch.no_grad():
+                    model.proto.weight.data = model.proto.weight / model.proto.weight.norm()
         if scheduler is not None:
             scheduler.step()
         train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))
