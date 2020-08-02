@@ -80,7 +80,7 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
             # (w^T Sigma w) regularization.
             if args['reg_type'] == 'wSw':
                 omega = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
-                loss = loss_func(logits, target) - args['reg_weight'] * omega
+                loss = loss_func(logits, target) - args['reg_weight'] * torch.log(omega)
             elif args['reg_type'] == 'max_ent':
                 threshold = math.log(args['var_threshold']) + (1 + math.log(2 * math.pi)) / 2
                 entropy_loss = torch.relu(threshold - model.base.dist.entropy()).mean()
