@@ -79,19 +79,24 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
             optimizer.zero_grad()
             # (w^T Sigma w) regularization.
             if args['reg_type'] == 'wSw':
-                omega = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
-                loss = loss_func(logits, target) - args['reg_weight'] * torch.log(omega)
-            elif args['reg_type'] == 'max_ent':
+                reg_term = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
+                loss = loss_func(logits, target) - args['reg_weight'] * torch.log(reg_term)
+            elif args['reg_type'] == 'max_entropy':
                 threshold = math.log(args['var_threshold']) + (1 + math.log(2 * math.pi)) / 2
-                entropy_loss = torch.relu(threshold - model.base.dist.entropy()).mean()
-                loss = loss_func(logits, target) + args['reg_weight'] * entropy_loss
+                entropy = torch.relu(threshold - model.base.dist.entropy()).mean()
+                loss = loss_func(logits, target) + args['reg_weight'] * entropy
+            elif args['reg_type'] == 'lin_comb':
+                threshold = math.log(args['var_threshold']) + (1 + math.log(2 * math.pi)) / 2
+                entropy = torch.relu(threshold - model.base.dist.entropy()).mean()
+                reg_term = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
+                loss = loss_func(logits, target) + entropy - torch.log(reg_term)  # TODO: Maybe add reg. weights.
             else:
                 raise NotImplementedError('Regularization "{}" not supported.'.format(args['reg_type']))
             loss.backward()
             optimizer.step()
             # For (w^T Sigma w) regularization, force w to have unit norm (so it doesn't explode).
             # Comment out if using weight decay.
-            if args['reg_type'] == 'wSw':
+            if (args['reg_type'] == 'wSw') or (args['reg_type'] == 'lin_comb'):
                 with torch.no_grad():
                     model.proto.weight.data = model.proto.weight / model.proto.weight.norm()
         if scheduler is not None:
