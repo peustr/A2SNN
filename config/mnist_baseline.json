@@ -5,10 +5,6 @@
     "num_epochs": 200,
     "feature_dim": 32,
     "lr": 0.01,
-    "lr_scheduler": {
-        "trigger_epochs": [100, 180],
-        "decay_factor": 0.1
-    },
     "wd": 0.01,
     "training_type": "stochastic",
     "var_type": "full_rank",

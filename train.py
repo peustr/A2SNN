@@ -4,7 +4,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.optim import Adam
-from torch.optim.lr_scheduler import MultiStepLR
 
 from metrics import accuracy
 from utils import normalize_cifar10
@@ -53,11 +52,6 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
     #     {'params': model.base.parameters()},
     #     {'params': model.proto.parameters(), 'weight_decay': args['wd']}
     # ], lr=args['lr'])
-    if args['lr_scheduler'] is not None:
-        scheduler = MultiStepLR(
-            optimizer, args['lr_scheduler']['trigger_epochs'], gamma=args['lr_scheduler']['decay_factor'])
-    else:
-        scheduler = None
     loss_func = nn.CrossEntropyLoss()
     if args['dataset'] == 'cifar10':
         norm_func = normalize_cifar10
@@ -94,8 +88,6 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
             if (args['reg_type'] == 'wSw') or (args['reg_type'] == 'lin_comb'):
                 with torch.no_grad():
                     model.proto.weight.data = model.proto.weight / model.proto.weight.norm()
-        if scheduler is not None:
-            scheduler.step()
         train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_acc.append(accuracy(model, test_loader, device=device, norm=norm_func))
         sigma_hist.append(model.sigma.detach().cpu().numpy())
