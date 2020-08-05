@@ -1,4 +1,3 @@
-import math
 import os
 
 import numpy as np
@@ -77,19 +76,15 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
                 data = norm_func(data)
             logits = model(data)
             optimizer.zero_grad()
-            # (w^T Sigma w) regularization.
+            l2 = args['reg_weight']
             if args['reg_type'] == 'wSw':
-                reg_term = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
-                loss = loss_func(logits, target) - args['reg_weight'] * torch.log(reg_term)
+                wSw = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
+                loss = loss_func(logits, target) - l2 * torch.log(wSw)
             elif args['reg_type'] == 'max_entropy':
-                threshold = math.log(args['var_threshold']) + (1 + math.log(2 * math.pi)) / 2
-                entropy = torch.relu(threshold - model.base.dist.entropy()).mean()
-                loss = loss_func(logits, target) + args['reg_weight'] * entropy
-            elif args['reg_type'] == 'lin_comb':
-                threshold = math.log(args['var_threshold']) + (1 + math.log(2 * math.pi)) / 2
-                entropy = torch.relu(threshold - model.base.dist.entropy()).mean()
-                reg_term = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
-                loss = loss_func(logits, target) + entropy - torch.log(reg_term)  # TODO: Maybe add reg. weights.
+                loss = loss_func(logits, target) - l2 * model.base.dist.entropy()
+            elif args['reg_type'] == 'wSw+max_entropy':
+                wSw = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
+                loss = loss_func(logits, target) - l2 * model.base.dist.entropy() - l2 * torch.log(wSw)
             else:
                 raise NotImplementedError('Regularization "{}" not supported.'.format(args['reg_type']))
             loss.backward()
