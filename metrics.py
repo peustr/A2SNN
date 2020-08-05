@@ -1,13 +1,11 @@
 import numpy as np
 
 
-def accuracy(model, data_loader, device='cpu', norm=None, attack=None):
+def accuracy(model, data_loader, device='cpu', norm=None):
     positives, total = [], []
     for data, target in data_loader:
         data = data.to(device)
         target = target.to(device)
-        if attack is not None:
-            data = attack(model, data, target).to(device)
         model.eval()
         if norm is not None:
             data = norm(data)
