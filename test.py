@@ -31,7 +31,7 @@ def test_attack(model, data_loader, attack_name, epsilon_values, args, device='c
             advs, _, success = attack_model(
                 fbox_model, data, target, epsilons=epsilon_values, mc=args['monte_carlo_runs'])
         elif attack_name in ('C&W', 'Boundary Attack'):
-            advs, _, success = attack_model(fbox_model, data, target)
+            advs, _, success = attack_model(fbox_model, data, target, epsilons=epsilon_values)
         success_cum.append(success)
     success_cum = torch.cat(success_cum, dim=1)
     robust_accuracy = 1 - success_cum.float().mean(axis=-1)
