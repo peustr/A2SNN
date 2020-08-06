@@ -75,10 +75,10 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
                 wSw = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
                 loss = loss_func(logits, target) - l2 * torch.log(wSw)
             elif args['reg_type'] == 'max_entropy':
-                loss = loss_func(logits, target) - l2 * model.base.dist.entropy()
+                loss = loss_func(logits, target) - l2 * model.base.dist.entropy().mean()
             elif args['reg_type'] == 'wSw+max_entropy':
                 wSw = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
-                loss = loss_func(logits, target) - l2 * model.base.dist.entropy() - l2 * torch.log(wSw)
+                loss = loss_func(logits, target) - l2 * model.base.dist.entropy().mean() - l2 * torch.log(wSw)
             else:
                 raise NotImplementedError('Regularization "{}" not supported.'.format(args['reg_type']))
             loss.backward()
