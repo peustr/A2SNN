@@ -4,11 +4,10 @@ from foolbox import PyTorchModel
 from foolbox.attacks import FGSMMC, PGDMC, BIMMC
 
 
-# Attack parameters come from the PCL paper: https://arxiv.org/abs/1904.00887 Section 5.1.
 attacks = {
     'FGSM': FGSMMC(),
-    'PGD': PGDMC(rel_stepsize=0.1, steps=10),
-    'BIM': BIMMC(rel_stepsize=0.1, steps=10),
+    'PGD': PGDMC(rel_stepsize=1.0, steps=10),
+    'BIM': BIMMC(rel_stepsize=1.0, steps=10),
 }
 
 
