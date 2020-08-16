@@ -1,14 +1,14 @@
 import torch
 
 from foolbox import PyTorchModel
-from foolbox.attacks import FGSMMC, PGDMC, BIMMC, CW, BoundaryAttack
+from foolbox.attacks import FGSMMC, PGDMC, BIMMC, CWMC, BoundaryAttack
 
 
 attacks = {
     'FGSM': FGSMMC(),
     'PGD': PGDMC(rel_stepsize=1.0, steps=10),
-    'BIM': BIMMC(rel_stepsize=1.0, steps=10),
-    'C&W': CW(),
+    'BIM': BIMMC(rel_stepsize=1.0, steps=200),
+    'C&W': CWMC(steps=1000),
     'Boundary Attack': BoundaryAttack(),
 }
 
@@ -27,10 +27,10 @@ def test_attack(model, data_loader, attack_name, epsilon_values, args, device='c
     for data, target in data_loader:
         data = data.to(device)
         target = target.to(device)
-        if attack_name in ('FGSM', 'PGD', 'BIM'):
+        if attack_name in ('FGSM', 'PGD', 'BIM', 'C&W'):
             advs, _, success = attack_model(
                 fbox_model, data, target, epsilons=epsilon_values, mc=args['monte_carlo_runs'])
-        elif attack_name in ('C&W', 'Boundary Attack'):
+        elif attack_name in ('Boundary Attack',):
             advs, _, success = attack_model(fbox_model, data, target, epsilons=epsilon_values)
         success_cum.append(success)
     success_cum = torch.cat(success_cum, dim=1)
