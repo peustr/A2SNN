@@ -6,7 +6,7 @@ import torch.nn as nn
 from torch.optim import Adam
 
 from metrics import accuracy
-from utils import normalize_cifar10
+from utils import normalize_cifar10, normalize_cifar100
 
 
 def train_vanilla(model, train_loader, test_loader, args, device='cpu'):
@@ -14,6 +14,8 @@ def train_vanilla(model, train_loader, test_loader, args, device='cpu'):
     loss_func = nn.CrossEntropyLoss()
     if args['dataset'] == 'cifar10':
         norm_func = normalize_cifar10
+    elif args['dataset'] == 'cifar100':
+        norm_func = normalize_cifar100
     else:
         norm_func = None
     epoch_margin = 10
@@ -55,6 +57,8 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
     loss_func = nn.CrossEntropyLoss()
     if args['dataset'] == 'cifar10':
         norm_func = normalize_cifar10
+    elif args['dataset'] == 'cifar100':
+        norm_func = normalize_cifar100
     elif args['dataset'] == 'mnist':
         norm_func = None
     epoch_margin = 10

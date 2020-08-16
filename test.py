@@ -20,6 +20,8 @@ def test_attack(model, data_loader, attack_name, epsilon_values, args, device='c
         preprocessing = None
     elif args['dataset'] == 'cifar10':
         preprocessing = dict(mean=(0.4914, 0.4822, 0.4465), std=(0.2023, 0.1994, 0.2010), axis=-3)
+    elif args['dataset'] == 'cifar100':
+        preprocessing = dict(mean=(0.5071, 0.4867, 0.4408), std=(0.2675, 0.2565, 0.2761), axis=-3)
     else:
         raise NotImplementedError('Dataset not supported.')
     fbox_model = PyTorchModel(model, bounds=(0, 1), device=device, preprocessing=preprocessing)
