@@ -216,18 +216,23 @@ class SESNN_ResNet18(nn.Module):
 
 
 def model_factory(dataset, training_type, variance_type, feature_dim):
-    if variance_type not in ('diagonal', 'full_rank'):
+    if variance_type is not None and variance_type not in ('diagonal', 'full_rank'):
         raise NotImplementedError('Only "diagonal" and "full_rank" variance types supported.')
-    if dataset in ('mnist',):
+    if dataset == 'mnist':
         if training_type == 'vanilla':
             model = VanillaNet(feature_dim, 10)
         elif training_type == 'stochastic':
             model = SESNN_CNN(feature_dim, 10, variance_type)
-    elif dataset in ('cifar10', 'cifar100'):
+    elif dataset == 'cifar10':
         if training_type == 'vanilla':
             model = VanillaResNet18(feature_dim, 10)
         elif training_type == 'stochastic':
             model = SESNN_ResNet18(feature_dim, 10, variance_type)
+    elif dataset == 'cifar100':
+        if training_type == 'vanilla':
+            model = VanillaResNet18(feature_dim, 100)
+        elif training_type == 'stochastic':
+            model = SESNN_ResNet18(feature_dim, 100, variance_type)
     else:
         raise NotImplementedError('Model for dataset {} not implemented.'.format(dataset))
     return model
