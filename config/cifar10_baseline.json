@@ -15,5 +15,5 @@
         "stats": "output/stats/sesnn_cifar10_b3_lr_0.01_regw_1.0",
         "models": "output/models/sesnn_cifar10_b3_lr_0.01_regw_1.0"
     },
-    "monte_carlo_runs": 10
+    "monte_carlo_runs": 30
 }
