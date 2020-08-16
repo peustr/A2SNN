@@ -15,3 +15,13 @@ conda activate SESNN
 conda install pytorch torchvision cpuonly -c pytorch
 pip install -r requirements.txt --no-cache-dir
 ```
+
+## Installing Foolbox
+
+Extended with EoT, required for adversarial testing.
+
+```
+git clone https://github.com/peustr/foolbox.git
+cd foolbox
+pip install -e .
+```
