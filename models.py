@@ -223,6 +223,11 @@ def model_factory(dataset, training_type, variance_type, feature_dim):
             model = VanillaNet(feature_dim, 10)
         elif training_type == 'stochastic':
             model = SESNN_CNN(feature_dim, 10, variance_type)
+    if dataset == 'fmnist':
+        if training_type == 'vanilla':
+            model = VanillaNet(feature_dim, 10)
+        elif training_type == 'stochastic':
+            model = SESNN_CNN(feature_dim, 10, variance_type)
     elif dataset == 'cifar10':
         if training_type == 'vanilla':
             model = VanillaResNet18(feature_dim, 10)

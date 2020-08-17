@@ -16,7 +16,7 @@ attacks = {
 def test_attack(model, data_loader, attack_name, epsilon_values, args, device='cpu'):
     model.eval()
     attack_model = attacks[attack_name]
-    if args['dataset'] == 'mnist':
+    if args['dataset'] in ('mnist', 'fmnist'):
         preprocessing = None
     elif args['dataset'] == 'cifar10':
         preprocessing = dict(mean=(0.4914, 0.4822, 0.4465), std=(0.2023, 0.1994, 0.2010), axis=-3)

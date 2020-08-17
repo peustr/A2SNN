@@ -3,13 +3,18 @@ from torchvision import datasets, transforms
 
 
 def get_data_loader(dataset, batch_size, train=True, shuffle=True, drop_last=True):
-    if dataset not in ('mnist', 'cifar10', 'cifar100'):
+    if dataset not in ('mnist', 'fmnist', 'cifar10', 'cifar100'):
         raise NotImplementedError('Dataset not supported.')
     if dataset == 'mnist':
         tr = transforms.Compose([
             transforms.ToTensor(),
         ])
         d = datasets.MNIST('./data', train=train, transform=tr)
+    if dataset == 'fmnist':
+        tr = transforms.Compose([
+            transforms.ToTensor(),
+        ])
+        d = datasets.FashionMNIST('./data', train=train, transform=tr)
     elif dataset == 'cifar10':
         if train:
             tr = transforms.Compose([
