@@ -5,11 +5,8 @@
     "num_epochs": 200,
     "feature_dim": 32,
     "lr": 0.01,
-    "wd": 0.0,
     "training_type": "vanilla",
-    "var_type": "full_rank",
-    "reg_type": "wSw",
-    "reg_weight": 1.0,
+    "var_type": null,
     "device": "cuda:0",
     "output_path": {
         "stats": "output/stats/vanilla_cnn_mnist",
