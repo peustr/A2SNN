@@ -55,7 +55,7 @@ def test(args, device):
     if args['dataset'] in ('mnist', 'fmnist'):
         eps_names = ['0.0', '0.1', '0.2', '0.3', '0.4', '0.5']
         eps_values = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
-    elif args['dataset'] in ('cifar10', 'cifar100'):
+    elif args['dataset'] in ('cifar10', 'cifar100', 'svhn'):
         eps_names = [
             '  0/255', '  1/255', '  2/255', '  4/255', '  8/255', ' 16/255', ' 32/255', ' 64/255', '128/255']
         eps_values = [0. / 255, 1. / 255, 2. / 255, 4. / 255, 8. / 255, 16. / 255, 32. / 255, 64. / 255, 128. / 255]

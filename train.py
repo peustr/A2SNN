@@ -6,7 +6,7 @@ import torch.nn as nn
 from torch.optim import Adam
 
 from metrics import accuracy
-from utils import normalize_cifar10, normalize_cifar100
+from utils import normalize_cifar10, normalize_cifar100, normalize_generic
 
 
 def train_vanilla(model, train_loader, test_loader, args, device='cpu'):
@@ -16,6 +16,8 @@ def train_vanilla(model, train_loader, test_loader, args, device='cpu'):
         norm_func = normalize_cifar10
     elif args['dataset'] == 'cifar100':
         norm_func = normalize_cifar100
+    elif args['dataset'] == 'svhn':
+        norm_func = normalize_generic
     else:
         norm_func = None
     epoch_margin = 10
@@ -59,6 +61,8 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
         norm_func = normalize_cifar10
     elif args['dataset'] == 'cifar100':
         norm_func = normalize_cifar100
+    elif args['dataset'] == 'svhn':
+        norm_func = normalize_generic
     elif args['dataset'] in ('mnist', 'fmnist'):
         norm_func = None
     epoch_margin = 10

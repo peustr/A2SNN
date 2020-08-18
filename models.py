@@ -238,6 +238,11 @@ def model_factory(dataset, training_type, variance_type, feature_dim):
             model = VanillaResNet18(feature_dim, 100)
         elif training_type == 'stochastic':
             model = SESNN_ResNet18(feature_dim, 100, variance_type)
+    elif dataset == 'svhn':
+        if training_type == 'vanilla':
+            model = VanillaResNet18(feature_dim, 10)
+        elif training_type == 'stochastic':
+            model = SESNN_ResNet18(feature_dim, 10, variance_type)
     else:
         raise NotImplementedError('Model for dataset {} not implemented.'.format(dataset))
     return model
