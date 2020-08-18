@@ -23,7 +23,6 @@ class Generator(nn.Module):
         self.conv6 = self._make_conv_layer(128, 128, 5, 1, 2)
         self.pool3 = nn.MaxPool2d(2, stride=2, padding=0)
         self.fc1 = nn.Linear(1152, D)
-        self.prelu_fc1 = nn.PReLU()
 
     def _make_conv_layer(self, in_channels, out_channels, kernel_size, stride, padding):
         conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride=stride, padding=padding)
@@ -41,7 +40,7 @@ class Generator(nn.Module):
         x = self.conv6(x)
         x = self.pool3(x)
         x = torch.flatten(x, start_dim=1)
-        x = self.prelu_fc1(self.fc1(x))
+        x = self.fc1(x)
         return x
 
 
