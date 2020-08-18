@@ -26,7 +26,7 @@ class Generator(nn.Module):
         self.prelu_fc1 = nn.PReLU()
 
     def _make_conv_layer(self, in_channels, out_channels, kernel_size, stride, padding):
-        conv = nn.Conv2d(1, in_channels, out_channels, kernel_size, stride=stride, padding=padding)
+        conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride=stride, padding=padding)
         prelu = nn.PReLU()
         return nn.Sequential(conv, prelu)
 
