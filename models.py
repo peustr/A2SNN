@@ -167,25 +167,6 @@ class ResNet18_StochasticBaseMultivariate(nn.Module):
         return x
 
 
-class ClassicSESNN(nn.Module):
-    """ Data-dependent noise. """
-    def __init__(self, D, C):
-        super().__init__()
-        self.gen = Generator(D)
-        self.mu = nn.Linear(D, D)
-        self.sigma = nn.Linear(D, D)
-        self.proto = nn.Linear(D, C)
-
-    def forward(self, x):
-        x = self.gen(x)
-        mu = self.mu(x)
-        sigma = self.sigma(x)
-        self.dist = Normal(mu, f.softplus(sigma - 5))
-        x_sample = self.dist.rsample()
-        x = self.proto(x_sample)
-        return x
-
-
 class SESNN_CNN(nn.Module):
     def __init__(self, D, C, variance_type):
         super().__init__()
