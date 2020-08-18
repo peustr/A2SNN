@@ -1,0 +1,19 @@
+{
+    "dataset": "cifar100",
+    "pretrained": null,
+    "batch_size": 128,
+    "num_epochs": 200,
+    "feature_dim": 128,
+    "lr": 0.01,
+    "wd": 0.0,
+    "training_type": "vanilla",
+    "var_type": "full_rank",
+    "reg_type": "wSw",
+    "reg_weight": 1.0,
+    "device": "cuda:0",
+    "output_path": {
+        "stats": "output/stats/vanilla_resnet_cifar100",
+        "models": "output/models/vanilla_resnet_cifar100"
+    },
+    "monte_carlo_runs": 30
+}

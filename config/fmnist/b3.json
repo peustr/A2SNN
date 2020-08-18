@@ -1,5 +1,5 @@
 {
-    "dataset": "mnist",
+    "dataset": "fmnist",
     "pretrained": null,
     "batch_size": 128,
     "num_epochs": 200,
@@ -10,10 +10,10 @@
     "var_type": "full_rank",
     "reg_type": "wSw",
     "reg_weight": 1.0,
-    "device": "cuda:0",
+    "device": "cuda:2",
     "output_path": {
-        "stats": "output/stats/sesnn_mnist_b3_lr_0.01_regw_1.0",
-        "models": "output/models/sesnn_mnist_b3_lr_0.01_regw_1.0"
+        "stats": "output/stats/sesnn_fmnist_b3_lr_0.01_regw_1.0",
+        "models": "output/models/sesnn_fmnist_b3_lr_0.01_regw_1.0"
     },
     "monte_carlo_runs": 30
 }

@@ -10,7 +10,7 @@
     "var_type": "full_rank",
     "reg_type": "wSw",
     "reg_weight": 1.0,
-    "device": "cuda:0",
+    "device": "cuda:2",
     "output_path": {
         "stats": "output/stats/sesnn_cifar100_b3_lr_0.01_regw_1.0",
         "models": "output/models/sesnn_cifar100_b3_lr_0.01_regw_1.0"
