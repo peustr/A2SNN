@@ -22,7 +22,7 @@ class Generator(nn.Module):
         self.conv5 = self._make_conv_layer(64, 128, 5, 1, 2)
         self.conv6 = self._make_conv_layer(128, 128, 5, 1, 2)
         self.pool3 = nn.MaxPool2d(2, stride=2, padding=0)
-        self.fc1 = nn.Linear(512, D)
+        self.fc1 = nn.Linear(1152, D)
         self.prelu_fc1 = nn.PReLU()
 
     def _make_conv_layer(self, in_channels, out_channels, kernel_size, stride, padding):
@@ -40,7 +40,7 @@ class Generator(nn.Module):
         x = self.conv5(x)
         x = self.conv6(x)
         x = self.pool3(x)
-        x = torch.flatten(x)
+        x = torch.flatten(x, start_dim=1)
         x = self.prelu_fc1(self.fc1(x))
         return x
 
@@ -244,7 +244,7 @@ def model_factory(dataset, training_type, variance_type, feature_dim):
             model = VanillaNet(feature_dim, 10)
         elif training_type == 'stochastic':
             model = SESNN_CNN(feature_dim, 10, variance_type)
-    if dataset == 'fmnist':
+    elif dataset == 'fmnist':
         if training_type == 'vanilla':
             model = VanillaNet(feature_dim, 10)
         elif training_type == 'stochastic':
