@@ -8,19 +8,40 @@ from resnet import resnet18
 
 
 class Generator(nn.Module):
+    """ LeNets++ architecture from: "A Discriminative Feature Learning Approach for Deep Face Recognition"
+        https://ydwen.github.io/papers/WenECCV16.pdf
+    """
     def __init__(self, D):
         super(Generator, self).__init__()
-        self.conv1 = nn.Conv2d(1, 16, 5, 1)
-        self.conv2 = nn.Conv2d(16, 32, 5, 1)
-        self.fc1 = nn.Linear(4 * 4 * 32, D)
+        self.conv1 = self._make_conv_layer(1, 32, 5, 1, 2)
+        self.conv2 = self._make_conv_layer(32, 32, 5, 1, 2)
+        self.pool1 = nn.MaxPool2d(2, stride=2, padding=0)
+        self.conv3 = self._make_conv_layer(32, 64, 5, 1, 2)
+        self.conv4 = self._make_conv_layer(64, 64, 5, 1, 2)
+        self.pool2 = nn.MaxPool2d(2, stride=2, padding=0)
+        self.conv5 = self._make_conv_layer(64, 128, 5, 1, 2)
+        self.conv6 = self._make_conv_layer(128, 128, 5, 1, 2)
+        self.pool3 = nn.MaxPool2d(2, stride=2, padding=0)
+        self.fc1 = nn.Linear(512, D)
+        self.prelu_fc1 = nn.PReLU()
+
+    def _make_conv_layer(self, in_channels, out_channels, kernel_size, stride, padding):
+        conv = nn.Conv2d(1, in_channels, out_channels, kernel_size, stride=stride, padding=padding)
+        prelu = nn.PReLU()
+        return nn.Sequential(conv, prelu)
 
     def forward(self, x):
-        x = f.relu(self.conv1(x))
-        x = f.max_pool2d(x, 2, 2)
-        x = f.relu(self.conv2(x))
-        x = f.max_pool2d(x, 2, 2)
-        x = x.view(-1, 4 * 4 * 32)
-        x = f.relu(self.fc1(x))
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.pool1(x)
+        x = self.conv3(x)
+        x = self.conv4(x)
+        x = self.pool2(x)
+        x = self.conv5(x)
+        x = self.conv6(x)
+        x = self.pool3(x)
+        x = torch.flatten(x)
+        x = self.prelu_fc1(self.fc1(x))
         return x
 
 
