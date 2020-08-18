@@ -9,36 +9,29 @@ from resnet import resnet18
 
 class Generator(nn.Module):
     """ LeNets++ architecture from: "A Discriminative Feature Learning Approach for Deep Face Recognition"
-        https://ydwen.github.io/papers/WenECCV16.pdf
+        The variant is used by PCL, i.e. no max pooling and no padding.
     """
     def __init__(self, D):
         super(Generator, self).__init__()
-        self.conv1 = self._make_conv_layer(1, 32, 5, 1, 2)
-        self.conv2 = self._make_conv_layer(32, 32, 5, 1, 2)
-        self.pool1 = nn.MaxPool2d(2, stride=2, padding=0)
-        self.conv3 = self._make_conv_layer(32, 64, 5, 1, 2)
-        self.conv4 = self._make_conv_layer(64, 64, 5, 1, 2)
-        self.pool2 = nn.MaxPool2d(2, stride=2, padding=0)
-        self.conv5 = self._make_conv_layer(64, 128, 5, 1, 2)
-        self.conv6 = self._make_conv_layer(128, 128, 5, 1, 2)
-        self.pool3 = nn.MaxPool2d(2, stride=2, padding=0)
-        self.fc1 = nn.Linear(1152, D)
+        self.conv1 = self._make_conv_layer(1, 32, 5)
+        self.conv2 = self._make_conv_layer(32, 32, 5)
+        self.conv3 = self._make_conv_layer(32, 64, 5)
+        self.conv4 = self._make_conv_layer(64, 64, 5)
+        self.conv5 = self._make_conv_layer(64, 128, 5)
+        self.conv6 = self._make_conv_layer(128, 128, 5)
+        self.fc1 = nn.Linear(2048, D)
 
-    def _make_conv_layer(self, in_channels, out_channels, kernel_size, stride, padding):
-        conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride=stride, padding=padding)
-        prelu = nn.PReLU()
-        return nn.Sequential(conv, prelu)
+    def _make_conv_layer(self, in_channels, out_channels, kernel_size):
+        return nn.Sequential(
+            nn.Conv2d(in_channels, out_channels, kernel_size), nn.PReLU())
 
     def forward(self, x):
         x = self.conv1(x)
         x = self.conv2(x)
-        x = self.pool1(x)
         x = self.conv3(x)
         x = self.conv4(x)
-        x = self.pool2(x)
         x = self.conv5(x)
         x = self.conv6(x)
-        x = self.pool3(x)
         x = torch.flatten(x, start_dim=1)
         x = self.fc1(x)
         return x

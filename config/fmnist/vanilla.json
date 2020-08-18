@@ -4,7 +4,7 @@
     "batch_size": 128,
     "num_epochs": 200,
     "feature_dim": 32,
-    "lr": 0.01,
+    "lr": 0.001,
     "training_type": "vanilla",
     "var_type": null,
     "device": "cuda:0",
