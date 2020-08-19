@@ -57,6 +57,7 @@ def get_data_loader(dataset, batch_size, train=True, shuffle=True, drop_last=Tru
                 transforms.ToTensor(),
                 # transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
             ])
-        d = datasets.SVHN('./data', train=train, transform=tr)
+        split = 'train' if train else 'test'
+        d = datasets.SVHN('./data', split=split, transform=tr)
     data_loader = torch.utils.data.DataLoader(d, batch_size=batch_size, shuffle=shuffle, drop_last=drop_last)
     return data_loader
