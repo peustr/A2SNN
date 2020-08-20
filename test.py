@@ -6,8 +6,8 @@ from foolbox.attacks import FGSMMC, PGDMC, BIMMC, CWMC, BoundaryAttack
 
 attacks = {
     'FGSM': FGSMMC(),
-    'PGD': PGDMC(rel_stepsize=1.0, steps=10),
-    'BIM': BIMMC(rel_stepsize=1.0, steps=200),
+    'PGD': PGDMC(rel_stepsize=0.1, steps=10),
+    'BIM': BIMMC(rel_stepsize=0.1, steps=1000),
     'C&W': CWMC(steps=1000),
     'Boundary Attack': BoundaryAttack(),
 }

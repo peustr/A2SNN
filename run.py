@@ -51,7 +51,8 @@ def test(args, device):
     model.load(os.path.join(args['output_path']['models'], 'ckpt_best'))
     model.eval()
     test_loader = get_data_loader(args['dataset'], args['batch_size'], False, shuffle=False, drop_last=False)
-    attack_names = ['FGSM', 'PGD', 'BIM', 'C&W']
+    # attack_names = ['FGSM', 'PGD', 'BIM', 'C&W']
+    attack_names = ['FGSM', 'PGD']
     if args['dataset'] in ('mnist', 'fmnist'):
         eps_names = ['0.0', '0.1', '0.2', '0.3', '0.4', '0.5']
         eps_values = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
