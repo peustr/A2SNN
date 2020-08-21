@@ -8,7 +8,7 @@ attacks = {
     'FGSM': FGSMMC(),
     'PGD': PGDMC(rel_stepsize=0.1, steps=10),
     'BIM': BIMMC(rel_stepsize=0.1, steps=1000),
-    'C&W': CWMC(steps=1000),
+    'C&W': CWMC(steps=1000, initial_const=0.1),
     'Boundary Attack': BoundaryAttack(),
 }
 
