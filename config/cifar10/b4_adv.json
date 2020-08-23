@@ -1,0 +1,21 @@
+{
+    "dataset": "cifar10",
+    "pretrained": null,
+    "batch_size": 128,
+    "num_epochs": 200,
+    "feature_dim": 32,
+    "lr": 0.01,
+    "wd": 0.0,
+    "attack": "pgd",
+    "epsilon": 0.03,
+    "training_type": "stochastic",
+    "var_type": "full_rank",
+    "reg_type": "wSw+max_entropy",
+    "reg_weight": [0.1, 1.0],
+    "device": "cuda:3",
+    "output_path": {
+        "stats": "output/stats/sesnn_cifar10_b4_lr_0.01_regw_0.1_1.0",
+        "models": "output/models/sesnn_cifar10_b4_lr_0.01_regw_0.1_1.0"
+    },
+    "monte_carlo_runs": 30
+}
