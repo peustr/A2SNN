@@ -141,8 +141,8 @@ def train_stochastic_adversarial(model, train_loader, test_loader, args, device=
     for epoch in range(args['num_epochs'] + epoch_margin):
         for data, target in train_loader:
             data = data.to(device)
-            perturbed_data = attack_func(model, data, target, epsilon=args['epsilon']).to(device)
             target = target.to(device)
+            perturbed_data = attack_func(model, data, target, epsilon=args['epsilon']).to(device)
             model.train()
             if norm_func is not None:
                 data = norm_func(data)
