@@ -8,6 +8,7 @@ from data_loaders import get_data_loader
 from models import model_factory
 from test import test_attack
 from train import train_vanilla, train_stochastic
+from utils import attack_param_mapping
 
 
 def parse_args():
@@ -51,21 +52,15 @@ def test(args, device):
     model.load(os.path.join(args['output_path']['models'], 'ckpt_best'))
     model.eval()
     test_loader = get_data_loader(args['dataset'], args['batch_size'], False, shuffle=False, drop_last=False)
-    # attack_names = ['FGSM', 'PGD', 'BIM', 'C&W']
-    attack_names = ['FGSM', 'PGD']
-    if args['dataset'] in ('mnist', 'fmnist'):
-        eps_names = ['0.0', '0.1', '0.2', '0.3', '0.4', '0.5']
-        eps_values = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
-    elif args['dataset'] in ('cifar10', 'cifar100', 'svhn'):
-        eps_names = [
-            '  0/255', '  1/255', '  2/255', '  4/255', '  8/255', ' 16/255', ' 32/255', ' 64/255', '128/255']
-        eps_values = [0. / 255, 1. / 255, 2. / 255, 4. / 255, 8. / 255, 16. / 255, 32. / 255, 64. / 255, 128. / 255]
+    attack_names = ['FGSM', 'PGD', 'BIM', 'C&W', 'Few-Pixel']
     print('Adversarial testing.')
     for idx, attack in enumerate(attack_names):
+        eps_names = attack_param_mapping[attack][args['dataset']]['e_des']
+        eps_values = attack_param_mapping[attack][args['dataset']]['e_val']
         robust_accuracy = test_attack(model, test_loader, attack, eps_values, args, device)
         print('Attack: {}'.format(attack_names[idx]))
         for eps_name, eps_value, accuracy in zip(eps_names, eps_values, robust_accuracy):
-            print('ε: {}, acc: {:.3f}'.format(eps_name, accuracy.item()))
+            print('Attack Strength: {}, Accuracy: {:.3f}'.format(eps_name, accuracy.item()))
     print('Finished testing.')
 
 

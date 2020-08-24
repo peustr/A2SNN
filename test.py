@@ -1,15 +1,14 @@
 import torch
 
 from foolbox import PyTorchModel
-from foolbox.attacks import FGSMMC, PGDMC, BIMMC, CWMC, BoundaryAttack
+from foolbox.attacks import FGSMMC, PGDMC, BIMMC, CWMC
 
 
 attacks = {
     'FGSM': FGSMMC(),
     'PGD': PGDMC(rel_stepsize=0.1, steps=10),
     'BIM': BIMMC(rel_stepsize=0.1, steps=1000),
-    'C&W': CWMC(steps=1000, initial_const=0.1),
-    'Boundary Attack': BoundaryAttack(),
+    'C&W': CWMC(steps=1000, stepsize=5e-4, confidence=0., initial_const=1e-3),
 }
 
 
@@ -34,8 +33,8 @@ def test_attack(model, data_loader, attack_name, epsilon_values, args, device='c
         if attack_name in ('FGSM', 'PGD', 'BIM', 'C&W'):
             advs, _, success = attack_model(
                 fbox_model, data, target, epsilons=epsilon_values, mc=args['monte_carlo_runs'])
-        elif attack_name in ('Boundary Attack',):
-            advs, _, success = attack_model(fbox_model, data, target, epsilons=epsilon_values)
+        elif attack_name in ('Few-Pixel',):
+            raise NotImplementedError()
         success_cum.append(success)
     success_cum = torch.cat(success_cum, dim=1)
     robust_accuracy = 1 - success_cum.float().mean(axis=-1)
