@@ -5,7 +5,8 @@ import torch
 import torch.nn as nn
 from torch.optim import Adam
 
-from attacks import fgsm, pgd
+from attacks.fgsm import fgsm
+from attacks.pgd import pgd
 from metrics import accuracy
 from utils import normalize_cifar10, normalize_cifar100, normalize_generic
 
