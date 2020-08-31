@@ -43,7 +43,7 @@ def attack(img, label, net, preproc, target=None, pixels=1, maxiter=75, popsize=
     targeted_attack = target is not None
     target_class = target if targeted_attack else label
     bounds = [(0, 32), (0, 32), (0, 255), (0, 255), (0, 255)] * pixels
-    popmul = max(1, popsize/len(bounds))
+    popmul = int(max(1, popsize / len(bounds)))
 
     def predict_fn(xs):
         return predict_classes(xs, img, target_class, net, preproc, target is None)
