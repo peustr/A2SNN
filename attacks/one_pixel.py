@@ -61,7 +61,7 @@ def attack(img, label, net, preproc, target=None, pixels=1, maxiter=75, popsize=
             init[i*5+4] = np.random.normal(128, 127)
 
     attack_result = differential_evolution(
-        predict_fn, bounds, maxiter=maxiter, popsize=popmul, callback=callback_fn, init=inits)
+        predict_fn, bounds, maxiter=maxiter, popsize=popmul, callback=callback_fn, init=inits, polish=False)
 
     attack_image = perturb_image(attack_result.x, img, preproc)
     predicted_probs = f.softmax(net(attack_image), dim=1).data.cpu().numpy()[0]
