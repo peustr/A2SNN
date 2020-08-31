@@ -24,13 +24,13 @@ def perturb_image(xs, img, preproc):
 
 def predict_classes(xs, img, target_class, net, preproc, minimize=True):
     imgs_perturbed = perturb_image(xs, img.clone(), preproc)
-    predictions = f.softmax(net(imgs_perturbed)).data.cpu().numpy()[:, target_class]
+    predictions = f.softmax(net(imgs_perturbed), dim=1).data.cpu().numpy()[:, target_class]
     return predictions if minimize else 1 - predictions
 
 
 def attack_success(x, img, target_class, net, preproc, targeted_attack=False, verbose=False):
     attack_image = perturb_image(x, img.clone(), preproc)
-    confidence = f.softmax(net(attack_image)).data.cpu().numpy()[0]
+    confidence = f.softmax(net(attack_image), dim=1).data.cpu().numpy()[0]
     predicted_class = np.argmax(confidence)
     if (verbose):
         print("Confidence: {}".format(confidence[target_class]))
@@ -64,9 +64,8 @@ def attack(img, label, net, preproc, target=None, pixels=1, maxiter=75, popsize=
         predict_fn, bounds, maxiter=maxiter, popsize=popmul, recombination=1, atol=-1, callback=callback_fn,
         polish=False, init=inits)
 
-    attack_image = perturb_image(attack_result.x, img)
-    predicted_probs = f.softmax(net(attack_image)).data.cpu().numpy()[0]
-
+    attack_image = perturb_image(attack_result.x, img, preproc)
+    predicted_probs = f.softmax(net(attack_image), dim=1).data.cpu().numpy()[0]
     predicted_class = np.argmax(predicted_probs)
 
     if (not targeted_attack and predicted_class != label) or (targeted_attack and predicted_class == target_class):
@@ -79,7 +78,7 @@ def attack_all(net, loader, preproc, device, pixels=1, targeted=False, maxiter=7
     success = 0
     for batch_idx, (img, target) in enumerate(loader):
         img = img.to(device)
-        prior_probs = f.softmax(net(img))
+        prior_probs = f.softmax(net(img), dim=1)
         _, indices = torch.max(prior_probs, 1)
         if target[0] != indices.data.cpu()[0]:
             continue
