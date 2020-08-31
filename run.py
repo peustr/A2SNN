@@ -56,18 +56,18 @@ def test(args, device):
     attack_names = ['FGSM', 'PGD', 'BIM', 'C&W', 'Few-Pixel']
     print('Adversarial testing.')
     for idx, attack in enumerate(attack_names):
+        print('Attack: {}'.format(attack))
         if attack == 'Few-Pixel':
             if args['dataset'] == 'cifar10':
                 preproc = {'mean': [0.4914, 0.4822, 0.4465], 'std': [0.2023, 0.1994, 0.2010]}
             else:
                 raise NotImplementedError('Only CIFAR-10 supported for the one-pixel attack.')
             one_pixel_attack(
-                model, test_loader, preproc, pixels=1, targeted=False, maxiter=75, popsize=400, verbose=False)
+                model, test_loader, preproc, device, pixels=1, targeted=False, maxiter=75, popsize=400, verbose=False)
         else:
             eps_names = attack_param_mapping[attack][args['dataset']]['e_des']
             eps_values = attack_param_mapping[attack][args['dataset']]['e_val']
             robust_accuracy = test_attack(model, test_loader, attack, eps_values, args, device)
-            print('Attack: {}'.format(attack))
             for eps_name, eps_value, accuracy in zip(eps_names, eps_values, robust_accuracy):
                 print('Attack Strength: {}, Accuracy: {:.3f}'.format(eps_name, accuracy.item()))
     print('Finished testing.')

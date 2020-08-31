@@ -74,10 +74,11 @@ def attack(img, label, net, preproc, target=None, pixels=1, maxiter=75, popsize=
     return 0, [None]
 
 
-def attack_all(net, loader, preproc, pixels=1, targeted=False, maxiter=75, popsize=400, verbose=False):
+def attack_all(net, loader, preproc, device, pixels=1, targeted=False, maxiter=75, popsize=400, verbose=False):
     correct = 0
     success = 0
     for batch_idx, (img, target) in enumerate(loader):
+        img = img.to(device)
         prior_probs = f.softmax(net(img))
         _, indices = torch.max(prior_probs, 1)
         if target[0] != indices.data.cpu()[0]:
