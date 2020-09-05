@@ -67,7 +67,7 @@ def test(args, device):
             else:
                 raise NotImplementedError('Only CIFAR-10 supported for the one-pixel attack.')
             one_pixel_attack(
-                model, test_loader, preproc, device, pixels=1, targeted=False, maxiter=75, popsize=400, verbose=False)
+                model, test_loader, preproc, device, pixels=1, targeted=False, maxiter=1000, popsize=400, verbose=False)
         else:
             eps_names = attack_param_mapping[attack][args['dataset']]['e_des']
             eps_values = attack_param_mapping[attack][args['dataset']]['e_val']
