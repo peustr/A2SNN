@@ -8,7 +8,7 @@ from attacks.one_pixel import one_pixel_attack
 from data_loaders import get_data_loader
 from models import model_factory
 from test import test_attack
-from train import train_vanilla, train_stochastic
+from train import train_vanilla, train_stochastic, train_stochastic_adversarial
 from utils import attack_param_mapping
 
 
@@ -40,8 +40,11 @@ def train(args, device):
     elif args['training_type'] == 'stochastic':
         print('Stochastic training.')
         train_stochastic(model, train_loader, test_loader, args, device=device)
+    elif args['training_type'] == 'adversarial':
+        print('Adversarial stochastic training.')
+        train_stochastic_adversarial(model, train_loader, test_loader, args, device=device)
     else:
-        raise NotImplementedError('Training "{}" not implemented. Supported: [vanilla|stochastic].'.format(
+        raise NotImplementedError('Training "{}" not implemented. Supported: [vanilla|stochastic|adversarial].'.format(
             args['training_type']))
     print('Finished training.')
 
@@ -53,7 +56,8 @@ def test(args, device):
     model.load(os.path.join(args['output_path']['models'], 'ckpt_best'))
     model.eval()
     test_loader = get_data_loader(args['dataset'], args['batch_size'], False, shuffle=False, drop_last=False)
-    attack_names = ['FGSM', 'PGD', 'BIM', 'C&W', 'Few-Pixel']
+    # attack_names = ['FGSM', 'PGD', 'BIM', 'C&W', 'Few-Pixel']
+    attack_names = ['FGSM', 'PGD']
     print('Adversarial testing.')
     for idx, attack in enumerate(attack_names):
         print('Attack: {}'.format(attack))
