@@ -215,27 +215,27 @@ def model_factory(dataset, training_type, variance_type, feature_dim):
     if dataset == 'mnist':
         if training_type == 'vanilla':
             model = VanillaNet(feature_dim, 10)
-        elif training_type == 'stochastic':
+        elif training_type in ('stochastic', 'adversarial'):
             model = SESNN_CNN(feature_dim, 10, variance_type)
     elif dataset == 'fmnist':
         if training_type == 'vanilla':
             model = VanillaNet(feature_dim, 10)
-        elif training_type == 'stochastic':
+        elif training_type in ('stochastic', 'adversarial'):
             model = SESNN_CNN(feature_dim, 10, variance_type)
     elif dataset == 'cifar10':
         if training_type == 'vanilla':
             model = VanillaResNet18(feature_dim, 10)
-        elif training_type == 'stochastic':
+        elif training_type in ('stochastic', 'adversarial'):
             model = SESNN_ResNet18(feature_dim, 10, variance_type)
     elif dataset == 'cifar100':
         if training_type == 'vanilla':
             model = VanillaResNet18(feature_dim, 100)
-        elif training_type == 'stochastic':
+        elif training_type in ('stochastic', 'adversarial'):
             model = SESNN_ResNet18(feature_dim, 100, variance_type)
     elif dataset == 'svhn':
         if training_type == 'vanilla':
             model = VanillaResNet18(feature_dim, 10)
-        elif training_type == 'stochastic':
+        elif training_type in ('stochastic', 'adversarial'):
             model = SESNN_ResNet18(feature_dim, 10, variance_type)
     else:
         raise NotImplementedError('Model for dataset {} not implemented.'.format(dataset))
