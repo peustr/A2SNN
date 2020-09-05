@@ -12,5 +12,5 @@
         "stats": "output/stats/vanilla_cnn_mnist",
         "models": "output/models/vanilla_cnn_mnist"
     },
-    "monte_carlo_runs": 30
+    "monte_carlo_runs": 50
 }

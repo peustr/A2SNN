@@ -12,5 +12,5 @@
         "stats": "output/stats/vanilla_resnet_cifar100",
         "models": "output/models/vanilla_resnet_cifar100"
     },
-    "monte_carlo_runs": 30
+    "monte_carlo_runs": 50
 }

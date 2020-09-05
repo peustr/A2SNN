@@ -15,5 +15,5 @@
         "stats": "output/stats/sesnn_svhn_b2_lr_0.01_regw_0.05",
         "models": "output/models/sesnn_svhn_b2_lr_0.01_regw_0.05"
     },
-    "monte_carlo_runs": 30
+    "monte_carlo_runs": 50
 }

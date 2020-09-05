@@ -12,5 +12,5 @@
         "stats": "output/stats/vanilla_resnet_svhn",
         "models": "output/models/vanilla_resnet_svhn"
     },
-    "monte_carlo_runs": 30
+    "monte_carlo_runs": 50
 }
