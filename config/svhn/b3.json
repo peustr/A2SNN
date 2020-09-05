@@ -9,11 +9,11 @@
     "training_type": "stochastic",
     "var_type": "full_rank",
     "reg_type": "wSw",
-    "reg_weight": 1.0,
+    "reg_weight": 0.5,
     "device": "cuda:2",
     "output_path": {
-        "stats": "output/stats/sesnn_svhn_b3_lr_0.01_regw_1.0",
-        "models": "output/models/sesnn_svhn_b3_lr_0.01_regw_1.0"
+        "stats": "output/stats/sesnn_svhn_b3_lr_0.01_regw_0.5",
+        "models": "output/models/sesnn_svhn_b3_lr_0.01_regw_0.5"
     },
     "monte_carlo_runs": 30
 }
