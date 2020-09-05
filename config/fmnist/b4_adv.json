@@ -8,7 +8,7 @@
     "wd": 0.0,
     "training_type": "adversarial",
     "attack": "pgd",
-    "epsilon": 0.03,
+    "epsilon": 0.3,
     "var_type": "full_rank",
     "reg_type": "wSw+max_entropy",
     "reg_weight": [0.1, 0.5],
