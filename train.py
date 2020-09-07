@@ -81,12 +81,18 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
             logits = model(data)
             optimizer.zero_grad()
             if args['reg_type'] == 'wSw':
-                wSw = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
+                if args['var_type'] == 'full_rank':
+                    wSw = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
+                elif args['var_type'] == 'diagonal':
+                    wSw = (model.proto.weight @ model.sigma.diag() @ model.proto.weight.T).diagonal().sum()
                 loss = loss_func(logits, target) - args['reg_weight'] * torch.log(wSw)
             elif args['reg_type'] == 'max_entropy':
                 loss = loss_func(logits, target) - args['reg_weight'] * model.base.dist.entropy().mean()
             elif args['reg_type'] == 'wSw+max_entropy':
-                wSw = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
+                if args['var_type'] == 'full_rank':
+                    wSw = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
+                elif args['var_type'] == 'diagonal':
+                    wSw = (model.proto.weight @ model.sigma.diag() @ model.proto.weight.T).diagonal().sum()
                 # In this case reg_weight needs to be an array with two items.
                 loss = loss_func(logits, target)\
                     - args['reg_weight'][0] * model.base.dist.entropy().mean() - args['reg_weight'][1] * torch.log(wSw)
