@@ -12,8 +12,8 @@
     "reg_weight": 1.0,
     "device": "cuda:2",
     "output_path": {
-        "stats": "output/stats/sesnn_cifar10_b4_lr_0.01_regw_1.0",
-        "models": "output/models/sesnn_cifar10_b4_lr_0.01_regw_1.0"
+        "stats": "output/stats/a2snn_cifar10_b4_lr_0.01_regw_1.0",
+        "models": "output/models/a2snn_cifar10_b4_lr_0.01_regw_1.0"
     },
     "monte_carlo_runs": 50
 }

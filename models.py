@@ -159,7 +159,7 @@ class ResNet18_StochasticBaseMultivariate(nn.Module):
         return x
 
 
-class SESNN_CNN(nn.Module):
+class A2SNN_CNN(nn.Module):
     def __init__(self, D, C, variance_type):
         super().__init__()
         if variance_type == 'full_rank':
@@ -184,7 +184,7 @@ class SESNN_CNN(nn.Module):
         self.load_state_dict(torch.load(filename + ".pt"))
 
 
-class SESNN_ResNet18(nn.Module):
+class A2SNN_ResNet18(nn.Module):
     def __init__(self, D, C, variance_type):
         super().__init__()
         if variance_type == 'full_rank':
@@ -216,27 +216,27 @@ def model_factory(dataset, training_type, variance_type, feature_dim):
         if training_type == 'vanilla':
             model = VanillaNet(feature_dim, 10)
         elif training_type in ('stochastic', 'adversarial'):
-            model = SESNN_CNN(feature_dim, 10, variance_type)
+            model = A2SNN_CNN(feature_dim, 10, variance_type)
     elif dataset == 'fmnist':
         if training_type == 'vanilla':
             model = VanillaNet(feature_dim, 10)
         elif training_type in ('stochastic', 'adversarial'):
-            model = SESNN_CNN(feature_dim, 10, variance_type)
+            model = A2SNN_CNN(feature_dim, 10, variance_type)
     elif dataset == 'cifar10':
         if training_type == 'vanilla':
             model = VanillaResNet18(feature_dim, 10)
         elif training_type in ('stochastic', 'adversarial'):
-            model = SESNN_ResNet18(feature_dim, 10, variance_type)
+            model = A2SNN_ResNet18(feature_dim, 10, variance_type)
     elif dataset == 'cifar100':
         if training_type == 'vanilla':
             model = VanillaResNet18(feature_dim, 100)
         elif training_type in ('stochastic', 'adversarial'):
-            model = SESNN_ResNet18(feature_dim, 100, variance_type)
+            model = A2SNN_ResNet18(feature_dim, 100, variance_type)
     elif dataset == 'svhn':
         if training_type == 'vanilla':
             model = VanillaResNet18(feature_dim, 10)
         elif training_type in ('stochastic', 'adversarial'):
-            model = SESNN_ResNet18(feature_dim, 10, variance_type)
+            model = A2SNN_ResNet18(feature_dim, 10, variance_type)
     else:
         raise NotImplementedError('Model for dataset {} not implemented.'.format(dataset))
     return model
