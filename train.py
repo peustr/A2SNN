@@ -162,17 +162,6 @@ def train_stochastic_adversarial(model, train_loader, test_loader, args, device=
                 clean_loss = loss_func(logits, target)
                 adv_loss = loss_func(adv_logits, target)
                 loss = 0.5 * clean_loss + 0.5 * adv_loss - args['reg_weight'] * torch.log(wSw)
-            elif args['reg_type'] == 'max_entropy':
-                clean_loss = loss_func(logits, target)
-                adv_loss = loss_func(adv_logits, target)
-                loss = 0.5 * clean_loss + 0.5 * adv_loss - args['reg_weight'] * model.base.dist.entropy().mean()
-            elif args['reg_type'] == 'wSw+max_entropy':
-                wSw = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
-                clean_loss = loss_func(logits, target)
-                adv_loss = loss_func(adv_logits, target)
-                # In this case reg_weight needs to be an array with two items.
-                loss = 0.5 * clean_loss + 0.5 * adv_loss\
-                    - args['reg_weight'][0] * model.base.dist.entropy().mean() - args['reg_weight'][1] * torch.log(wSw)
             else:
                 raise NotImplementedError('Regularization "{}" not supported.'.format(args['reg_type']))
             loss.backward()
