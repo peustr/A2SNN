@@ -7,6 +7,8 @@
     "lr": 0.001,
     "wd": 0.0,
     "training_type": "stochastic+adversarial",
+    "attack": "pgd",
+    "epsilon": 0.3,
     "var_type": "anisotropic",
     "device": "cuda:3",
     "output_path": {
