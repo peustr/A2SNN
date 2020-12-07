@@ -101,7 +101,7 @@ class StochasticBaseDiagonal(nn.Module):
 
 
 class StochasticBaseMultivariate(nn.Module):
-    """ Trainable triangular matrix L, so Sigma=LL^T. """
+    """ Trainable lower triangular matrix L, so Sigma=LL^T. """
     def __init__(self, D):
         super().__init__()
         self.gen = Generator(D)
@@ -138,7 +138,7 @@ class ResNet18_StochasticBaseDiagonal(nn.Module):
 
 
 class ResNet18_StochasticBaseMultivariate(nn.Module):
-    """ Trainable triangular matrix L, so Sigma=LL^T. """
+    """ Trainable lower triangular matrix L, so Sigma=LL^T. """
     def __init__(self, D):
         super().__init__()
         self.gen = GeneratorResNet18()
@@ -162,10 +162,10 @@ class ResNet18_StochasticBaseMultivariate(nn.Module):
 class A2SNN_CNN(nn.Module):
     def __init__(self, D, C, variance_type):
         super().__init__()
-        if variance_type == 'full_rank':
-            self.base = StochasticBaseMultivariate(D)
-        else:
+        if variance_type == 'isotropic':
             self.base = StochasticBaseDiagonal(D)
+        elif variance_type == 'anisotropic':
+            self.base = StochasticBaseMultivariate(D)
         self.proto = nn.Linear(D, C)
 
     @property
@@ -187,10 +187,10 @@ class A2SNN_CNN(nn.Module):
 class A2SNN_ResNet18(nn.Module):
     def __init__(self, D, C, variance_type):
         super().__init__()
-        if variance_type == 'full_rank':
-            self.base = ResNet18_StochasticBaseMultivariate(D)
-        else:
+        if variance_type == 'isotropic':
             self.base = ResNet18_StochasticBaseDiagonal(D)
+        elif variance_type == 'anisotropic':
+            self.base = ResNet18_StochasticBaseMultivariate(D)
         self.proto = nn.Linear(D, C)
 
     @property
@@ -210,32 +210,32 @@ class A2SNN_ResNet18(nn.Module):
 
 
 def model_factory(dataset, training_type, variance_type, feature_dim):
-    if variance_type is not None and variance_type not in ('diagonal', 'full_rank'):
-        raise NotImplementedError('Only "diagonal" and "full_rank" variance types supported.')
+    if variance_type is not None and variance_type not in ('isotropic', 'anisotropic'):
+        raise NotImplementedError('Only "isotropic" and "anisotropic" variance types supported.')
     if dataset == 'mnist':
         if training_type == 'vanilla':
             model = VanillaNet(feature_dim, 10)
-        elif training_type in ('stochastic', 'adversarial'):
+        elif training_type in ('stochastic', 'stochastic+adversarial'):
             model = A2SNN_CNN(feature_dim, 10, variance_type)
     elif dataset == 'fmnist':
         if training_type == 'vanilla':
             model = VanillaNet(feature_dim, 10)
-        elif training_type in ('stochastic', 'adversarial'):
+        elif training_type in ('stochastic', 'stochastic+adversarial'):
             model = A2SNN_CNN(feature_dim, 10, variance_type)
     elif dataset == 'cifar10':
         if training_type == 'vanilla':
             model = VanillaResNet18(feature_dim, 10)
-        elif training_type in ('stochastic', 'adversarial'):
+        elif training_type in ('stochastic', 'stochastic+adversarial'):
             model = A2SNN_ResNet18(feature_dim, 10, variance_type)
     elif dataset == 'cifar100':
         if training_type == 'vanilla':
             model = VanillaResNet18(feature_dim, 100)
-        elif training_type in ('stochastic', 'adversarial'):
+        elif training_type in ('stochastic', 'stochastic+adversarial'):
             model = A2SNN_ResNet18(feature_dim, 100, variance_type)
     elif dataset == 'svhn':
         if training_type == 'vanilla':
             model = VanillaResNet18(feature_dim, 10)
-        elif training_type in ('stochastic', 'adversarial'):
+        elif training_type in ('stochastic', 'stochastic+adversarial'):
             model = A2SNN_ResNet18(feature_dim, 10, variance_type)
     else:
         raise NotImplementedError('Model for dataset {} not implemented.'.format(dataset))
