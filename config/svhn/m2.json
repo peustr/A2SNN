@@ -4,16 +4,14 @@
     "batch_size": 128,
     "num_epochs": 200,
     "feature_dim": 32,
-    "lr": 0.01,
+    "lr": 0.001,
     "wd": 0.0,
     "training_type": "stochastic",
-    "var_type": "full_rank",
-    "reg_type": "wSw",
-    "reg_weight": 0.5,
+    "var_type": "anisotropic",
     "device": "cuda:2",
     "output_path": {
-        "stats": "output/stats/a2snn_svhn_b4_lr_0.01_regw_0.5",
-        "models": "output/models/a2snn_svhn_b4_lr_0.01_regw_0.5"
+        "stats": "output/stats/a2snn_svhn_m2",
+        "models": "output/models/a2snn_svhn_m2"
     },
     "monte_carlo_runs": 50
 }
