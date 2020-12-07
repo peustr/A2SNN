@@ -40,7 +40,7 @@ def train(args, device):
     elif args['training_type'] == 'stochastic':
         print('Stochastic training.')
         train_stochastic(model, train_loader, test_loader, args, device=device)
-    elif args['training_type'] == 'adversarial':
+    elif args['training_type'] == 'stochastic+adversarial':
         print('Adversarial stochastic training.')
         train_stochastic_adversarial(model, train_loader, test_loader, args, device=device)
     else:
