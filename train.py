@@ -77,8 +77,9 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
             loss.backward()
             optimizer.step()
             # Enforce unit norm via projected subgradient method.
-            # with torch.no_grad():
-            #     model.proto.weight.data = model.proto.weight / model.proto.weight.norm()
+            with torch.no_grad():
+                model.proto.weight.data /= model.proto.weight.norm()
+                model.base.L.data /= model.base.L.norm()
         train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_acc.append(accuracy(model, test_loader, device=device, norm=norm_func))
         sigma_hist.append(model.sigma.detach().cpu().numpy())
@@ -128,8 +129,9 @@ def train_stochastic_adversarial(model, train_loader, test_loader, args, device=
             loss.backward()
             optimizer.step()
             # Enforce unit norm via projected subgradient method.
-            # with torch.no_grad():
-            #     model.proto.weight.data = model.proto.weight / model.proto.weight.norm()
+            with torch.no_grad():
+                model.proto.weight.data /= model.proto.weight.norm()
+                model.base.L.data /= model.base.L.norm()
         train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_acc.append(accuracy(model, test_loader, device=device, norm=norm_func))
         sigma_hist.append(model.sigma.detach().cpu().numpy())
