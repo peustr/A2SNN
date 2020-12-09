@@ -8,6 +8,7 @@ from torch.optim import Adam
 from attacks.fgsm import fgsm
 from attacks.pgd import pgd
 from metrics import accuracy
+from test import test_attack
 from utils import normalize_cifar10, normalize_cifar100, normalize_generic
 
 
@@ -82,8 +83,10 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
                 model.base.L.data /= model.base.L.norm()
         train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_acc.append(accuracy(model, test_loader, device=device, norm=norm_func))
+        robust_accuracy = test_attack(model, test_loader, 'FGSM', [8. / 255.], args, device)
         sigma_hist.append(model.sigma.detach().cpu().numpy())
-        print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}'.format(epoch + 1, train_acc[-1], test_acc[-1]))
+        print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}, Rob acc: {}'.format(
+            epoch + 1, train_acc[-1], test_acc[-1], robust_accuracy))
         if test_acc[-1] > best_test_acc:
             best_test_acc = test_acc[-1]
             model.save(os.path.join(args['output_path']['models'], 'ckpt_best'))
