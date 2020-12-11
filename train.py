@@ -51,7 +51,7 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
     optimizer = Adam([
         {'params': model.base.gen.parameters(), 'lr': args['lr']},
         {'params': model.base.fc1.parameters(), 'lr': args['lr']},
-        {'params': model.base.L.parameters(), 'lr': args['lr'], 'weight_decay': args['wd']},
+        {'params': model.base.L, 'lr': args['lr'], 'weight_decay': args['wd']},
         {'params': model.proto.parameters(), 'lr': args['lr'], 'weight_decay': args['wd']}
     ])
     loss_func = nn.CrossEntropyLoss()
