@@ -74,7 +74,7 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
                 wca = (model.proto.weight @ model.sigma.diag() @ model.proto.weight.T).diagonal().sum()
             elif args['var_type'] == 'anisotropic':
                 wca = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
-            loss = loss_func(logits, target) - wca - model.base.dist.entropy()
+            loss = loss_func(logits, target) - wca
             loss.backward()
             optimizer.step()
             # Enforce unit norm via projected subgradient method.
