@@ -48,12 +48,7 @@ def train_vanilla(model, train_loader, test_loader, args, device='cpu'):
 
 
 def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
-    optimizer = Adam([
-        {'params': model.base.gen.parameters(), 'lr': args['lr']},
-        {'params': model.base.fc1.parameters(), 'lr': args['lr']},
-        {'params': model.base.L, 'lr': args['lr'], 'weight_decay': args['wd']},
-        {'params': model.proto.parameters(), 'lr': args['lr'], 'weight_decay': args['wd']}
-    ])
+    optimizer = Adam(model.parameters(), lr=args['lr'], weight_decay=args['wd'])
     loss_func = nn.CrossEntropyLoss()
     if args['dataset'] == 'cifar10':
         norm_func = normalize_cifar10
@@ -79,18 +74,18 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
                 wca = (model.proto.weight @ model.sigma.diag() @ model.proto.weight.T).diagonal().sum()
             elif args['var_type'] == 'anisotropic':
                 wca = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
-            loss = loss_func(logits, target) - torch.log(wca)
+            loss = loss_func(logits, target) - wca - model.base.dist.entropy()
             loss.backward()
             optimizer.step()
             # Enforce unit norm via projected subgradient method.
-            # with torch.no_grad():
-            #     model.proto.weight.data /= model.proto.weight.norm()
-            #     model.base.L.data /= model.base.L.norm()
+            with torch.no_grad():
+                model.proto.weight.data /= model.proto.weight.norm()
+                model.base.L.data /= model.base.L.norm()
         train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_acc.append(accuracy(model, test_loader, device=device, norm=norm_func))
         robust_accuracy = test_attack(model, test_loader, 'FGSM', [8. / 255.], args, device)[0].item()
         sigma_hist.append(model.sigma.detach().cpu().numpy())
-        print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}, Rob acc: {}'.format(
+        print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}, Rob acc: {:.3f}'.format(
             epoch + 1, train_acc[-1], test_acc[-1], robust_accuracy))
         if test_acc[-1] > best_test_acc:
             best_test_acc = test_acc[-1]
