@@ -58,6 +58,7 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
         norm_func = normalize_generic
     elif args['dataset'] in ('mnist', 'fmnist'):
         norm_func = None
+    epsilon = 1e-7  # A "very small value".
     best_test_acc = -1.
     train_acc, test_acc = [], []
     sigma_hist = []
@@ -83,7 +84,7 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
                     model.proto.weight.data[c] /= model.proto.weight.data[c].norm()
                 # Enforce spectral norm on Sigma and update lower triangular L.
                 sigma_svd = torch.svd(model.sigma)
-                new_sigma = sigma_svd[0] @ sigma_svd[1].clamp(0, 1).diag() @ sigma_svd[2].T
+                new_sigma = sigma_svd[0] @ sigma_svd[1].clamp(epsilon, 1).diag() @ sigma_svd[2].T
                 new_L = torch.cholesky(new_sigma)
                 model.base.L = nn.Parameter(new_L)
         train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))
