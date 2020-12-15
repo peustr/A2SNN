@@ -78,11 +78,14 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
             loss.backward()
             optimizer.step()
             with torch.no_grad():
-                # Enforce unit norm via projected subgradient method.
+                # Enforce unit norm on w via projected subgradient method.
                 for c in range(args['num_classes']):
                     model.proto.weight.data[c] /= model.proto.weight.data[c].norm()
-                # Fix triangular matrix after gradient update.
-                model.base.L = model.base.L.tril()
+                # Enforce spectral norm on Sigma and update lower triangular L.
+                sigma_svd = torch.svd(model.sigma)
+                new_sigma = sigma_svd[0] @ sigma_svd[1].clamp(0, 1).diag() @ sigma_svd[2].T
+                new_L = torch.cholesky(new_sigma)
+                model.base.L = nn.Parameter(new_L)
         train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_acc.append(accuracy(model, test_loader, device=device, norm=norm_func))
         robust_accuracy = test_attack(model, test_loader, 'FGSM', [8. / 255.], args, device)[0].item()
