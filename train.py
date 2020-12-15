@@ -86,7 +86,7 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
                 sigma_svd = torch.svd(model.sigma)
                 new_sigma = sigma_svd[0] @ sigma_svd[1].clamp(epsilon, 1).diag() @ sigma_svd[2].T
                 new_L = torch.cholesky(new_sigma)
-                model.base.L = nn.Parameter(new_L)
+                model.base.L.copy_(new_L)
         train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_acc.append(accuracy(model, test_loader, device=device, norm=norm_func))
         robust_accuracy = test_attack(model, test_loader, 'FGSM', [8. / 255.], args, device)[0].item()
