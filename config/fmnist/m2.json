@@ -1,5 +1,6 @@
 {
     "dataset": "fmnist",
+    "num_classes": 10,
     "pretrained": null,
     "batch_size": 128,
     "num_epochs": 200,

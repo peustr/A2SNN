@@ -77,10 +77,12 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
             loss = loss_func(logits, target) - wca
             loss.backward()
             optimizer.step()
-            # Enforce unit norm via projected subgradient method.
             with torch.no_grad():
-                model.proto.weight.data /= model.proto.weight.norm()
-                model.base.L.data /= model.base.L.norm()
+                # Enforce unit norm via projected subgradient method.
+                for c in range(args['num_classes']):
+                    model.proto.weight.data[c] /= model.proto.weight.data[c].norm()
+                # Fix triangular matrix after gradient update.
+                model.base.L = model.base.L.tril()
         train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_acc.append(accuracy(model, test_loader, device=device, norm=norm_func))
         robust_accuracy = test_attack(model, test_loader, 'FGSM', [8. / 255.], args, device)[0].item()
@@ -125,16 +127,21 @@ def train_stochastic_adversarial(model, train_loader, test_loader, args, device=
             logits = model(data)
             adv_logits = model(perturbed_data)
             optimizer.zero_grad()
-            wca = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
+            if args['var_type'] == 'isotropic':
+                wca = (model.proto.weight @ model.sigma.diag() @ model.proto.weight.T).diagonal().sum()
+            elif args['var_type'] == 'anisotropic':
+                wca = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
             clean_loss = loss_func(logits, target)
             adv_loss = loss_func(adv_logits, target)
-            loss = 0.5 * clean_loss + 0.5 * adv_loss - torch.log(wca)
+            loss = clean_loss + adv_loss - wca
             loss.backward()
             optimizer.step()
-            # Enforce unit norm via projected subgradient method.
             with torch.no_grad():
-                model.proto.weight.data /= model.proto.weight.norm()
-                model.base.L.data /= model.base.L.norm()
+                # Enforce unit norm via projected subgradient method.
+                for c in range(args['num_classes']):
+                    model.proto.weight.data[c] /= model.proto.weight.data[c].norm()
+                # Fix triangular matrix after gradient update.
+                model.base.L = model.base.L.tril()
         train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_acc.append(accuracy(model, test_loader, device=device, norm=norm_func))
         sigma_hist.append(model.sigma.detach().cpu().numpy())

@@ -106,15 +106,17 @@ class StochasticBaseMultivariate(nn.Module):
         super().__init__()
         self.gen = Generator(D)
         self.mu = nn.Parameter(torch.zeros(D), requires_grad=False)
-        self.L = nn.Parameter(torch.rand(D, D))
+        L = nn.Parameter(torch.rand(D, D))
+        with torch.no_grad():
+            self.L = L.tril()
 
     @property
     def sigma(self):
-        return self.L.tril() @ self.L.tril().T
+        return self.L @ self.L.T
 
     def forward(self, x):
         x = self.gen(x)
-        self.dist = MultivariateNormal(self.mu, scale_tril=self.L.tril())
+        self.dist = MultivariateNormal(self.mu, scale_tril=self.L)
         x_sample = self.dist.rsample()
         x = x + x_sample
         return x
@@ -144,16 +146,18 @@ class ResNet18_StochasticBaseMultivariate(nn.Module):
         self.gen = GeneratorResNet18()
         self.fc1 = nn.Linear(512, D)
         self.mu = nn.Parameter(torch.zeros(D), requires_grad=False)
-        self.L = nn.Parameter(torch.rand(D, D))
+        L = nn.Parameter(torch.rand(D, D))
+        with torch.no_grad():
+            self.L = L.tril()
 
     @property
     def sigma(self):
-        return self.L.tril() @ self.L.tril().T
+        return self.L @ self.L.T
 
     def forward(self, x):
         x = self.gen(x)
         x = f.relu(self.fc1(x))
-        self.dist = MultivariateNormal(self.mu, scale_tril=self.L.tril())
+        self.dist = MultivariateNormal(self.mu, scale_tril=self.L)
         x_sample = self.dist.rsample()
         x = x + x_sample
         return x
@@ -209,34 +213,34 @@ class A2SNN_ResNet18(nn.Module):
         self.load_state_dict(torch.load(filename + ".pt"))
 
 
-def model_factory(dataset, training_type, variance_type, feature_dim):
+def model_factory(dataset, training_type, variance_type, feature_dim, num_classes):
     if variance_type is not None and variance_type not in ('isotropic', 'anisotropic'):
         raise NotImplementedError('Only "isotropic" and "anisotropic" variance types supported.')
     if dataset == 'mnist':
         if training_type == 'vanilla':
-            model = VanillaNet(feature_dim, 10)
+            model = VanillaNet(feature_dim, num_classes)
         elif training_type in ('stochastic', 'stochastic+adversarial'):
-            model = A2SNN_CNN(feature_dim, 10, variance_type)
+            model = A2SNN_CNN(feature_dim, num_classes, variance_type)
     elif dataset == 'fmnist':
         if training_type == 'vanilla':
-            model = VanillaNet(feature_dim, 10)
+            model = VanillaNet(feature_dim, num_classes)
         elif training_type in ('stochastic', 'stochastic+adversarial'):
-            model = A2SNN_CNN(feature_dim, 10, variance_type)
+            model = A2SNN_CNN(feature_dim, num_classes, variance_type)
     elif dataset == 'cifar10':
         if training_type == 'vanilla':
-            model = VanillaResNet18(feature_dim, 10)
+            model = VanillaResNet18(feature_dim, num_classes)
         elif training_type in ('stochastic', 'stochastic+adversarial'):
-            model = A2SNN_ResNet18(feature_dim, 10, variance_type)
+            model = A2SNN_ResNet18(feature_dim, num_classes, variance_type)
     elif dataset == 'cifar100':
         if training_type == 'vanilla':
-            model = VanillaResNet18(feature_dim, 100)
+            model = VanillaResNet18(feature_dim, num_classes)
         elif training_type in ('stochastic', 'stochastic+adversarial'):
-            model = A2SNN_ResNet18(feature_dim, 100, variance_type)
+            model = A2SNN_ResNet18(feature_dim, num_classes, variance_type)
     elif dataset == 'svhn':
         if training_type == 'vanilla':
-            model = VanillaResNet18(feature_dim, 10)
+            model = VanillaResNet18(feature_dim, num_classes)
         elif training_type in ('stochastic', 'stochastic+adversarial'):
-            model = A2SNN_ResNet18(feature_dim, 10, variance_type)
+            model = A2SNN_ResNet18(feature_dim, num_classes, variance_type)
     else:
         raise NotImplementedError('Model for dataset {} not implemented.'.format(dataset))
     return model

@@ -28,7 +28,8 @@ def train(args, device):
     os.makedirs(args['output_path']['models'], exist_ok=True)
     train_loader = get_data_loader(args['dataset'], args['batch_size'], train=True, shuffle=True, drop_last=True)
     test_loader = get_data_loader(args['dataset'], args['batch_size'], train=False, shuffle=False, drop_last=False)
-    model = model_factory(args['dataset'], args['training_type'], args['var_type'], args['feature_dim'])
+    model = model_factory(
+        args['dataset'], args['training_type'], args['var_type'], args['feature_dim'], args['num_classes'])
     model.to(device)
     if args['pretrained'] is not None:
         if args['pretrained'] not in ('ckpt', 'ckpt_last', 'ckpt_robust'):
