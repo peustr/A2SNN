@@ -116,6 +116,7 @@ def train_stochastic_adversarial(model, train_loader, test_loader, args, device=
         attack_func = fgsm
     elif args['attack'] == 'pgd':
         attack_func = pgd
+    epsilon = 1e-3
     best_test_acc = -1.
     train_acc, test_acc = [], []
     sigma_hist = []
@@ -141,15 +142,20 @@ def train_stochastic_adversarial(model, train_loader, test_loader, args, device=
             loss.backward()
             optimizer.step()
             with torch.no_grad():
-                # Enforce unit norm via projected subgradient method.
+                # Enforce unit norm on w via projected subgradient method.
                 for c in range(args['num_classes']):
                     model.proto.weight.data[c] /= model.proto.weight.data[c].norm()
-                # Fix triangular matrix after gradient update.
-                model.base.L = model.base.L.tril()
+                # Enforce spectral norm on Sigma and update lower triangular L.
+                sigma_svd = torch.svd(model.sigma)
+                new_sigma = sigma_svd[0] @ sigma_svd[1].clamp(epsilon, 1).diag() @ sigma_svd[2].T
+                new_L = torch.cholesky(new_sigma)
+                model.base.L.copy_(new_L)
         train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))
         test_acc.append(accuracy(model, test_loader, device=device, norm=norm_func))
+        robust_accuracy = test_attack(model, test_loader, 'FGSM', [8. / 255.], args, device)[0].item()
         sigma_hist.append(model.sigma.detach().cpu().numpy())
-        print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}'.format(epoch + 1, train_acc[-1], test_acc[-1]))
+        print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}, Rob acc: {:.3f}'.format(
+            epoch + 1, train_acc[-1], test_acc[-1], robust_accuracy))
         if test_acc[-1] > best_test_acc:
             best_test_acc = test_acc[-1]
             model.save(os.path.join(args['output_path']['models'], 'ckpt_best'))
