@@ -58,7 +58,7 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
         norm_func = normalize_generic
     elif args['dataset'] in ('mnist', 'fmnist'):
         norm_func = None
-    epsilon = 1e-4
+    epsilon = 1e-3
     best_test_acc = -1.
     train_acc, test_acc = [], []
     sigma_hist = []
