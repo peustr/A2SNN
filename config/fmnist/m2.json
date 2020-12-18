@@ -8,8 +8,9 @@
     "lr": 0.001,
     "wd": 0.0,
     "training_type": "stochastic",
-    "var_type": "anisotropic",
-    "device": "cuda:2",
+    "var_type": "isotropic",
+    "reg_type": "wca",
+    "device": "cuda:1",
     "output_path": {
         "stats": "output/stats/a2snn_fmnist_m2",
         "models": "output/models/a2snn_fmnist_m2"
