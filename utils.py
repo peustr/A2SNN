@@ -1,3 +1,25 @@
+eps_names_mnist = ['0.0', '0.1', '0.2', '0.3', '0.4', '0.5']
+eps_values_mnist = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
+eps_names_cifar = ['  0/255', '  1/255', '  2/255', '  4/255', '  8/255', ' 16/255', ' 32/255', ' 64/255', '128/255']
+eps_values_cifar = [0. / 255, 1. / 255, 2. / 255, 4. / 255, 8. / 255, 16. / 255, 32. / 255, 64. / 255, 128. / 255]
+
+dataset_to_attack_strength = {
+    'mnist': {'eps_names': eps_names_mnist, 'eps_values': eps_values_mnist},
+    'fmnist': {'eps_names': eps_names_mnist, 'eps_values': eps_values_mnist},
+    'cifar10': {'eps_names': eps_names_cifar, 'eps_values': eps_values_cifar},
+    'cifar100': {'eps_names': eps_names_cifar, 'eps_values': eps_values_cifar},
+    'svhn': {'eps_names': eps_names_cifar, 'eps_values': eps_values_cifar},
+}
+
+attack_to_dataset_config = {
+    'FGSM': dataset_to_attack_strength,
+    'PGD': dataset_to_attack_strength,
+    'BIM': dataset_to_attack_strength,
+    'C&W': {'cifar10': {'eps_names': ['None'], 'eps_values': [None]}},
+    'Few-Pixel': {'cifar10': {'eps_names': ['1p', '2p', '3p'], 'eps_values': [1, 2, 3]}},
+}
+
+
 mean_cifar10 = (0.4914, 0.4822, 0.4465)
 std_cifar10 = (0.2023, 0.1994, 0.2010)
 
@@ -27,46 +49,3 @@ def normalize_generic(t):
     t[:, 1, :, :] = (t[:, 1, :, :] - mean_generic[1]) / std_generic[1]
     t[:, 2, :, :] = (t[:, 2, :, :] - mean_generic[2]) / std_generic[2]
     return t
-
-
-dataset_param_mapping = {
-    'mnist': {
-        'e_des': ['0.0', '0.1', '0.2', '0.3', '0.4', '0.5'],
-        'e_val': [0.0, 0.1, 0.2, 0.3, 0.4, 0.5],
-    },
-    'fmnist': {
-        'e_des': ['0.0', '0.1', '0.2', '0.3', '0.4', '0.5'],
-        'e_val': [0.0, 0.1, 0.2, 0.3, 0.4, 0.5],
-    },
-    'cifar10': {
-        'e_des': ['  0/255', '  1/255', '  2/255', '  4/255', '  8/255', ' 16/255', ' 32/255', ' 64/255', '128/255'],
-        'e_val': [0. / 255, 1. / 255, 2. / 255, 4. / 255, 8. / 255, 16. / 255, 32. / 255, 64. / 255, 128. / 255],
-    },
-    'cifar100': {
-        'e_des': ['  0/255', '  1/255', '  2/255', '  4/255', '  8/255', ' 16/255', ' 32/255', ' 64/255', '128/255'],
-        'e_val': [0. / 255, 1. / 255, 2. / 255, 4. / 255, 8. / 255, 16. / 255, 32. / 255, 64. / 255, 128. / 255],
-    },
-    'svhn': {
-        'e_des': ['  0/255', '  1/255', '  2/255', '  4/255', '  8/255', ' 16/255', ' 32/255', ' 64/255', '128/255'],
-        'e_val': [0. / 255, 1. / 255, 2. / 255, 4. / 255, 8. / 255, 16. / 255, 32. / 255, 64. / 255, 128. / 255],
-    },
-}
-
-
-attack_param_mapping = {
-    'FGSM': dataset_param_mapping,
-    'PGD': dataset_param_mapping,
-    'BIM': dataset_param_mapping,
-    'C&W': {
-        'cifar10': {
-            'e_des': ['None'],
-            'e_val': [None],
-        },
-    },
-    'Few-Pixel': {
-        'cifar10': {
-            'e_des': ['1 pixel', '2 pixels', '3 pixels'],
-            'e_val': [1, 2, 3],
-        },
-    },
-}

@@ -4,6 +4,10 @@ Panagiotis Eustratiadis and Henry Gouk and Da Li and Timothy M. Hospedales. "A S
 
 [Link to arXiv preprint.](https://arxiv.org/abs/2010.08852)
 
+## Disclaimer
+
+This codebase is under active maintenance. If you use it, it is advised that you always pull the latest version.
+
 ## Install
 
 Please follow the installation instructions at [INSTALL.md](INSTALL.md).

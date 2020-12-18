@@ -9,7 +9,7 @@ from data_loaders import get_data_loader
 from models import model_factory
 from test import test_attack
 from train import train_vanilla, train_stochastic, train_stochastic_adversarial
-from utils import attack_param_mapping
+from utils import attack_to_dataset_config
 
 
 def parse_args():
@@ -28,11 +28,12 @@ def train(args, device):
     os.makedirs(args['output_path']['models'], exist_ok=True)
     train_loader = get_data_loader(args['dataset'], args['batch_size'], train=True, shuffle=True, drop_last=True)
     test_loader = get_data_loader(args['dataset'], args['batch_size'], train=False, shuffle=False, drop_last=False)
-    model = model_factory(args['dataset'], args['training_type'], args['var_type'], args['feature_dim'])
+    model = model_factory(
+        args['dataset'], args['training_type'], args['var_type'], args['feature_dim'], args['num_classes'])
     model.to(device)
     if args['pretrained'] is not None:
         if args['pretrained'] not in ('ckpt', 'ckpt_last', 'ckpt_robust'):
-            raise ValueError()
+            raise ValueError('Pre-trained model name must be: [ckpt|ckpt_best|ckpt_robust]')
         model.load(os.path.join(args['output_path']['models'], args['pretrained']))
     if args['training_type'] == 'vanilla':
         print('Vanilla training.')
@@ -40,12 +41,13 @@ def train(args, device):
     elif args['training_type'] == 'stochastic':
         print('Stochastic training.')
         train_stochastic(model, train_loader, test_loader, args, device=device)
-    elif args['training_type'] == 'adversarial':
+    elif args['training_type'] == 'stochastic+adversarial':
         print('Adversarial stochastic training.')
         train_stochastic_adversarial(model, train_loader, test_loader, args, device=device)
     else:
-        raise NotImplementedError('Training "{}" not implemented. Supported: [vanilla|stochastic|adversarial].'.format(
-            args['training_type']))
+        raise NotImplementedError(
+            'Training "{}" not implemented. Supported: [vanilla|stochastic|stochastic+adversarial].'.format(
+                args['training_type']))
     print('Finished training.')
 
 
@@ -56,8 +58,7 @@ def test(args, device):
     model.load(os.path.join(args['output_path']['models'], 'ckpt_best'))
     model.eval()
     test_loader = get_data_loader(args['dataset'], args['batch_size'], False, shuffle=False, drop_last=False)
-    # attack_names = ['FGSM', 'PGD', 'BIM', 'C&W', 'Few-Pixel']
-    attack_names = ['FGSM', 'PGD']
+    attack_names = ['FGSM', 'PGD']  # 'BIM', 'C&W', 'Few-Pixel'
     print('Adversarial testing.')
     for idx, attack in enumerate(attack_names):
         print('Attack: {}'.format(attack))
@@ -69,8 +70,8 @@ def test(args, device):
             one_pixel_attack(
                 model, test_loader, preproc, device, pixels=1, targeted=False, maxiter=1000, popsize=400, verbose=False)
         else:
-            eps_names = attack_param_mapping[attack][args['dataset']]['e_des']
-            eps_values = attack_param_mapping[attack][args['dataset']]['e_val']
+            eps_names = attack_to_dataset_config[attack][args['dataset']]['eps_names']
+            eps_values = attack_to_dataset_config[attack][args['dataset']]['eps_values']
             robust_accuracy = test_attack(model, test_loader, attack, eps_values, args, device)
             for eps_name, eps_value, accuracy in zip(eps_names, eps_values, robust_accuracy):
                 print('Attack Strength: {}, Accuracy: {:.3f}'.format(eps_name, accuracy.item()))

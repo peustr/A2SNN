@@ -3,6 +3,8 @@ from torchvision import datasets, transforms
 
 
 def get_data_loader(dataset, batch_size, train=True, shuffle=True, drop_last=True):
+    # Note that we do not normalize in the data loader, because we may use adv. examples
+    # during training or testing.
     if dataset not in ('mnist', 'fmnist', 'cifar10', 'cifar100', 'svhn'):
         raise NotImplementedError('Dataset not supported.')
     if dataset == 'mnist':
@@ -21,13 +23,10 @@ def get_data_loader(dataset, batch_size, train=True, shuffle=True, drop_last=Tru
                 transforms.RandomCrop(32, padding=4),
                 transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
-                # Line commented out in case we use adv. examples during training.
-                # transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
             ])
         else:
             tr = transforms.Compose([
                 transforms.ToTensor(),
-                # transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
             ])
         d = datasets.CIFAR10('./data', train=train, transform=tr)
     elif dataset == 'cifar100':
@@ -36,26 +35,20 @@ def get_data_loader(dataset, batch_size, train=True, shuffle=True, drop_last=Tru
                 transforms.RandomCrop(32, padding=4),
                 transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
-                # Line commented out in case we use adv. examples during training.
-                # transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761)),
             ])
         else:
             tr = transforms.Compose([
                 transforms.ToTensor(),
-                # transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761)),
             ])
         d = datasets.CIFAR100('./data', train=train, transform=tr)
     elif dataset == 'svhn':
         if train:
             tr = transforms.Compose([
                 transforms.ToTensor(),
-                # Line commented out in case we use adv. examples during training.
-                # transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
             ])
         else:
             tr = transforms.Compose([
                 transforms.ToTensor(),
-                # transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
             ])
         split = 'train' if train else 'test'
         d = datasets.SVHN('./data', split=split, transform=tr)
