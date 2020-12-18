@@ -106,7 +106,7 @@ class StochasticBaseMultivariate(nn.Module):
         super().__init__()
         self.gen = Generator(D)
         self.mu = nn.Parameter(torch.zeros(D), requires_grad=False)
-        self.L = nn.Parameter(torch.rand(D, D).tril())
+        self.L = nn.Parameter((torch.eye(D) + torch.rand(D, D)).tril())
 
     @property
     def sigma(self):
@@ -144,7 +144,7 @@ class ResNet18_StochasticBaseMultivariate(nn.Module):
         self.gen = GeneratorResNet18()
         self.fc1 = nn.Linear(512, D)
         self.mu = nn.Parameter(torch.zeros(D), requires_grad=False)
-        self.L = nn.Parameter(torch.rand(D, D).tril())
+        self.L = nn.Parameter((torch.eye(D) + torch.rand(D, D)).tril())
 
     @property
     def sigma(self):
