@@ -6,7 +6,7 @@ Panagiotis Eustratiadis and Henry Gouk and Da Li and Timothy M. Hospedales. "A S
 
 ## Disclaimer
 
-This codebase is on active maintenance. If you use it, it is advised that you always pull the latest version.
+This codebase is under active maintenance. If you use it, it is advised that you always pull the latest version.
 
 ## Install
 
