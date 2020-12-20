@@ -8,7 +8,6 @@ from torch.optim import Adam
 from attacks.fgsm import fgsm
 from attacks.pgd import pgd
 from metrics import accuracy
-from test import test_attack
 from utils import normalize_cifar10, normalize_cifar100, normalize_generic
 
 
@@ -100,15 +99,12 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
                 model.base.L.copy_(new_L)
         train_accuracy = accuracy(model, train_loader, device=device, norm=norm_func)
         test_accuracy = accuracy(model, test_loader, device=device, norm=norm_func)
-        robust_accuracy = test_attack(model, test_loader, 'FGSM', [8. / 255.], args, device)[0].item()
         train_acc.append(train_accuracy)
         test_acc.append(test_accuracy)
         sigma_hist.append(model.sigma.detach().cpu().numpy())
-        print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}, Rob acc: {:.3f}'.format(
-            epoch + 1, train_acc[-1], test_acc[-1], robust_accuracy))
-        hybrid_acc = 0.5 * (test_accuracy + robust_accuracy)
-        if hybrid_acc > best_test_acc:
-            best_test_acc = hybrid_acc
+        print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}'.format(epoch + 1, train_acc[-1], test_acc[-1]))
+        if test_accuracy > best_test_acc:
+            best_test_acc = test_accuracy
             model.save(os.path.join(args['output_path']['models'], 'ckpt_best'))
             print('Best accuracy achieved on epoch {}.'.format(epoch + 1))
     np.save(os.path.join(args['output_path']['stats'], 'train_acc.npy'), np.array(train_acc))
@@ -178,15 +174,12 @@ def train_stochastic_adversarial(model, train_loader, test_loader, args, device=
                 model.base.L.copy_(new_L)
         train_accuracy = accuracy(model, train_loader, device=device, norm=norm_func)
         test_accuracy = accuracy(model, test_loader, device=device, norm=norm_func)
-        robust_accuracy = test_attack(model, test_loader, 'FGSM', [8. / 255.], args, device)[0].item()
         train_acc.append(train_accuracy)
         test_acc.append(test_accuracy)
         sigma_hist.append(model.sigma.detach().cpu().numpy())
-        print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}, Rob acc: {:.3f}'.format(
-            epoch + 1, train_acc[-1], test_acc[-1], robust_accuracy))
-        hybrid_acc = 0.5 * (test_accuracy + robust_accuracy)
-        if hybrid_acc > best_test_acc:
-            best_test_acc = hybrid_acc
+        print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}'.format(epoch + 1, train_acc[-1], test_acc[-1]))
+        if test_accuracy > best_test_acc:
+            best_test_acc = test_accuracy
             model.save(os.path.join(args['output_path']['models'], 'ckpt_best'))
             print('Best accuracy achieved on epoch {}.'.format(epoch + 1))
     np.save(os.path.join(args['output_path']['stats'], 'train_acc.npy'), np.array(train_acc))
