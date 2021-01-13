@@ -7,6 +7,7 @@ from torch.optim import Adam
 from attacks.fgsm import fgsm
 from attacks.pgd import pgd
 from metrics import accuracy
+from test import test_attack
 from utils import normalize_cifar10, normalize_cifar100, normalize_generic
 
 
@@ -93,9 +94,12 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
                 model.base.L.copy_(new_L)
         train_acc = accuracy(model, train_loader, device=device, norm=norm_func)
         test_acc = accuracy(model, test_loader, device=device, norm=norm_func)
-        print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}'.format(epoch + 1, train_acc, test_acc))
-        if test_acc > best_test_acc:
-            best_test_acc = test_acc
+        robust_acc = test_attack(model, test_loader, 'FGSM', [8. / 255.], args, device)[0].item()
+        print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}, Rob acc: {:.3f}'.format(
+            epoch + 1, train_acc, test_acc, robust_acc))
+        hybrid_acc = 0.5 * (test_acc + robust_acc)
+        if hybrid_acc > best_test_acc:
+            best_test_acc = hybrid_acc
             model.save(os.path.join(args['output_path']['models'], 'ckpt_best'))
             print('Best accuracy achieved on epoch {}.'.format(epoch + 1))
 
@@ -160,8 +164,11 @@ def train_stochastic_adversarial(model, train_loader, test_loader, args, device=
                 model.base.L.copy_(new_L)
         train_acc = accuracy(model, train_loader, device=device, norm=norm_func)
         test_acc = accuracy(model, test_loader, device=device, norm=norm_func)
-        print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}'.format(epoch + 1, train_acc, test_acc))
-        if test_acc > best_test_acc:
-            best_test_acc = test_acc
+        robust_acc = test_attack(model, test_loader, 'FGSM', [8. / 255.], args, device)[0].item()
+        print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}, Rob acc: {:.3f}'.format(
+            epoch + 1, train_acc, test_acc, robust_acc))
+        hybrid_acc = 0.5 * (test_acc + robust_acc)
+        if hybrid_acc > best_test_acc:
+            best_test_acc = hybrid_acc
             model.save(os.path.join(args['output_path']['models'], 'ckpt_best'))
             print('Best accuracy achieved on epoch {}.'.format(epoch + 1))
