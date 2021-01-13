@@ -74,17 +74,17 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
                     wca = (model.proto.weight @ model.sigma.diag() @ model.proto.weight.T).diagonal().sum()
                 elif args['var_type'] == 'anisotropic':
                     wca = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
-                loss = loss_func(logits, target) - wca
+                loss = loss_func(logits, target) - torch.log(wca)
             elif args['reg_type'] == 'max_entropy':
-                me = torch.log(model.base.dist.entropy().mean())
-                loss = loss_func(logits, target) - me
+                me = model.base.dist.entropy().mean()
+                loss = loss_func(logits, target) - torch.log(me)
             elif args['reg_type'] == 'wca+max_entropy':
                 if args['var_type'] == 'isotropic':
                     wca = (model.proto.weight @ model.sigma.diag() @ model.proto.weight.T).diagonal().sum()
                 elif args['var_type'] == 'anisotropic':
                     wca = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
-                me = torch.log(model.base.dist.entropy().mean())
-                loss = loss_func(logits, target) - wca - me
+                me = model.base.dist.entropy().mean()
+                loss = loss_func(logits, target) - torch.log(wca) - torch.log(me)
             loss.backward()
             optimizer.step()
             with torch.no_grad():
@@ -141,17 +141,17 @@ def train_stochastic_adversarial(model, train_loader, test_loader, args, device=
                     wca = (model.proto.weight @ model.sigma.diag() @ model.proto.weight.T).diagonal().sum()
                 elif args['var_type'] == 'anisotropic':
                     wca = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
-                loss = args['w_ct'] * clean_loss + args['w_at'] * adv_loss - wca
+                loss = args['w_ct'] * clean_loss + args['w_at'] * adv_loss - torch.log(wca)
             elif args['reg_type'] == 'max_entropy':
-                me = torch.log(model.base.dist.entropy().mean())
-                loss = args['w_ct'] * clean_loss + args['w_at'] * adv_loss - me
+                me = model.base.dist.entropy().mean()
+                loss = args['w_ct'] * clean_loss + args['w_at'] * adv_loss - torch.log(me)
             elif args['reg_type'] == 'wca+max_entropy':
                 if args['var_type'] == 'isotropic':
                     wca = (model.proto.weight @ model.sigma.diag() @ model.proto.weight.T).diagonal().sum()
                 elif args['var_type'] == 'anisotropic':
                     wca = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
-                me = torch.log(model.base.dist.entropy().mean())
-                loss = args['w_ct'] * clean_loss + args['w_at'] * adv_loss - wca - me
+                me = model.base.dist.entropy().mean()
+                loss = args['w_ct'] * clean_loss + args['w_at'] * adv_loss - torch.log(wca) - torch.log(me)
             loss.backward()
             optimizer.step()
             with torch.no_grad():
