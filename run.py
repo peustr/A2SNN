@@ -53,7 +53,8 @@ def train(args, device):
 
 def test(args, device):
     print(args)
-    model = model_factory(args['dataset'], args['training_type'], args['var_type'], args['feature_dim'])
+    model = model_factory(
+        args['dataset'], args['training_type'], args['var_type'], args['feature_dim'], args['num_classes'])
     model.to(device)
     model.load(os.path.join(args['output_path']['models'], 'ckpt_best'))
     model.eval()
