@@ -1,6 +1,5 @@
 import os
 
-import numpy as np
 import torch
 import torch.nn as nn
 from torch.optim import Adam
@@ -23,7 +22,6 @@ def train_vanilla(model, train_loader, test_loader, args, device='cpu'):
     else:
         norm_func = None
     best_test_acc = -1.
-    train_acc, test_acc = [], []
     for epoch in range(args['num_epochs']):
         for data, target in train_loader:
             data = data.to(device)
@@ -36,14 +34,12 @@ def train_vanilla(model, train_loader, test_loader, args, device='cpu'):
             loss = loss_func(logits, target)
             loss.backward()
             optimizer.step()
-        train_acc.append(accuracy(model, train_loader, device=device, norm=norm_func))
-        test_acc.append(accuracy(model, test_loader, device=device, norm=norm_func))
-        print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}'.format(epoch + 1, train_acc[-1], test_acc[-1]))
-        if test_acc[-1] > best_test_acc:
-            best_test_acc = test_acc[-1]
+        train_acc = accuracy(model, train_loader, device=device, norm=norm_func)
+        test_acc = accuracy(model, test_loader, device=device, norm=norm_func)
+        if test_acc > best_test_acc:
+            best_test_acc = test_acc
             torch.save(model.state_dict(), os.path.join(args['output_path']['models'], 'ckpt_best.pt'))
-    np.save(os.path.join(args['output_path']['stats'], 'train_acc.npy'), np.array(train_acc))
-    np.save(os.path.join(args['output_path']['stats'], 'test_acc.npy'), np.array(test_acc))
+        print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}'.format(epoch + 1, train_acc, test_acc))
 
 
 def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
@@ -57,10 +53,8 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
         norm_func = normalize_generic
     elif args['dataset'] in ('mnist', 'fmnist'):
         norm_func = None
-    epsilon = 1e-3
+    lower_bound = 1e-2
     best_test_acc = -1.
-    train_acc, test_acc = [], []
-    sigma_hist = []
     for epoch in range(args['num_epochs']):
         for data, target in train_loader:
             data = data.to(device)
@@ -94,22 +88,16 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
                     model.proto.weight.data[c] /= model.proto.weight.data[c].norm()
                 # Enforce spectral norm on Sigma and update lower triangular L.
                 sigma_svd = torch.svd(model.sigma)
-                new_sigma = sigma_svd[0] @ sigma_svd[1].clamp(epsilon, 1).diag() @ sigma_svd[2].T
+                new_sigma = sigma_svd[0] @ sigma_svd[1].clamp(lower_bound, 1.).diag() @ sigma_svd[2].T
                 new_L = torch.cholesky(new_sigma)
                 model.base.L.copy_(new_L)
-        train_accuracy = accuracy(model, train_loader, device=device, norm=norm_func)
-        test_accuracy = accuracy(model, test_loader, device=device, norm=norm_func)
-        train_acc.append(train_accuracy)
-        test_acc.append(test_accuracy)
-        sigma_hist.append(model.sigma.detach().cpu().numpy())
-        print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}'.format(epoch + 1, train_acc[-1], test_acc[-1]))
-        if test_accuracy > best_test_acc:
-            best_test_acc = test_accuracy
+        train_acc = accuracy(model, train_loader, device=device, norm=norm_func)
+        test_acc = accuracy(model, test_loader, device=device, norm=norm_func)
+        print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}'.format(epoch + 1, train_acc, test_acc))
+        if test_acc > best_test_acc:
+            best_test_acc = test_acc
             model.save(os.path.join(args['output_path']['models'], 'ckpt_best'))
             print('Best accuracy achieved on epoch {}.'.format(epoch + 1))
-    np.save(os.path.join(args['output_path']['stats'], 'train_acc.npy'), np.array(train_acc))
-    np.save(os.path.join(args['output_path']['stats'], 'test_acc.npy'), np.array(test_acc))
-    np.save(os.path.join(args['output_path']['stats'], 'sigma_hist.npy'), np.array(sigma_hist))
 
 
 def train_stochastic_adversarial(model, train_loader, test_loader, args, device='cpu'):
@@ -127,7 +115,7 @@ def train_stochastic_adversarial(model, train_loader, test_loader, args, device=
         attack_func = fgsm
     elif args['attack'] == 'pgd':
         attack_func = pgd
-    epsilon = 1e-3
+    lower_bound = 1e-2
     best_test_acc = -1.
     train_acc, test_acc = [], []
     sigma_hist = []
@@ -169,19 +157,13 @@ def train_stochastic_adversarial(model, train_loader, test_loader, args, device=
                     model.proto.weight.data[c] /= model.proto.weight.data[c].norm()
                 # Enforce spectral norm on Sigma and update lower triangular L.
                 sigma_svd = torch.svd(model.sigma)
-                new_sigma = sigma_svd[0] @ sigma_svd[1].clamp(epsilon, 1).diag() @ sigma_svd[2].T
+                new_sigma = sigma_svd[0] @ sigma_svd[1].clamp(lower_bound, 1.).diag() @ sigma_svd[2].T
                 new_L = torch.cholesky(new_sigma)
                 model.base.L.copy_(new_L)
-        train_accuracy = accuracy(model, train_loader, device=device, norm=norm_func)
-        test_accuracy = accuracy(model, test_loader, device=device, norm=norm_func)
-        train_acc.append(train_accuracy)
-        test_acc.append(test_accuracy)
-        sigma_hist.append(model.sigma.detach().cpu().numpy())
-        print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}'.format(epoch + 1, train_acc[-1], test_acc[-1]))
-        if test_accuracy > best_test_acc:
-            best_test_acc = test_accuracy
+        train_acc = accuracy(model, train_loader, device=device, norm=norm_func)
+        test_acc = accuracy(model, test_loader, device=device, norm=norm_func)
+        print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}'.format(epoch + 1, train_acc, test_acc))
+        if test_acc > best_test_acc:
+            best_test_acc = test_acc
             model.save(os.path.join(args['output_path']['models'], 'ckpt_best'))
             print('Best accuracy achieved on epoch {}.'.format(epoch + 1))
-    np.save(os.path.join(args['output_path']['stats'], 'train_acc.npy'), np.array(train_acc))
-    np.save(os.path.join(args['output_path']['stats'], 'test_acc.npy'), np.array(test_acc))
-    np.save(os.path.join(args['output_path']['stats'], 'sigma_hist.npy'), np.array(sigma_hist))
