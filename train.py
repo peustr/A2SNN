@@ -117,8 +117,6 @@ def train_stochastic_adversarial(model, train_loader, test_loader, args, device=
         attack_func = pgd
     lower_bound = 1e-2
     best_test_acc = -1.
-    train_acc, test_acc = [], []
-    sigma_hist = []
     for epoch in range(args['num_epochs']):
         for data, target in train_loader:
             data = data.to(device)
