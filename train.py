@@ -44,10 +44,14 @@ def train_vanilla(model, train_loader, test_loader, args, device='cpu'):
 
 
 def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
+    if args['var_type'] == 'isotropic':
+        trainable_noise_params = {'params': model.base.sigma, 'lr': args['lr'], 'weight_decay': args['wd']}
+    elif args['var_type'] == 'anisotropic':
+        trainable_noise_params = {'params': model.base.L, 'lr': args['lr'], 'weight_decay': args['wd']}
     optimizer = Adam([
         {'params': model.base.gen.parameters(), 'lr': args['lr']},
         {'params': model.base.fc1.parameters(), 'lr': args['lr']},
-        {'params': model.base.L, 'lr': args['lr'], 'weight_decay': args['wd']},
+        trainable_noise_params,
         {'params': model.proto.parameters(), 'lr': args['lr'], 'weight_decay': args['wd']}
     ])
     loss_func = nn.CrossEntropyLoss()
@@ -87,8 +91,9 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
                 loss = loss_func(logits, target) - torch.log(wca) - torch.log(me)
             loss.backward()
             optimizer.step()
-            with torch.no_grad():
-                model.base.L.data = model.base.L.data.tril()
+            if args['var_type'] == 'anisotropic':
+                with torch.no_grad():
+                    model.base.L.data = model.base.L.data.tril()
         train_acc = accuracy(model, train_loader, device=device, norm=norm_func)
         test_acc = accuracy(model, test_loader, device=device, norm=norm_func)
         robust_acc = test_attack(model, test_loader, 'FGSM', [8. / 255.], args, device)[0].item()
@@ -102,10 +107,14 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
 
 
 def train_stochastic_adversarial(model, train_loader, test_loader, args, device='cpu'):
+    if args['var_type'] == 'isotropic':
+        trainable_noise_params = {'params': model.base.sigma, 'lr': args['lr'], 'weight_decay': args['wd']}
+    elif args['var_type'] == 'anisotropic':
+        trainable_noise_params = {'params': model.base.L, 'lr': args['lr'], 'weight_decay': args['wd']}
     optimizer = Adam([
         {'params': model.base.gen.parameters(), 'lr': args['lr']},
         {'params': model.base.fc1.parameters(), 'lr': args['lr']},
-        {'params': model.base.L, 'lr': args['lr'], 'weight_decay': args['wd']},
+        trainable_noise_params,
         {'params': model.proto.parameters(), 'lr': args['lr'], 'weight_decay': args['wd']}
     ])
     loss_func = nn.CrossEntropyLoss()
@@ -154,8 +163,9 @@ def train_stochastic_adversarial(model, train_loader, test_loader, args, device=
                 loss = args['w_ct'] * clean_loss + args['w_at'] * adv_loss - torch.log(wca) - torch.log(me)
             loss.backward()
             optimizer.step()
-            with torch.no_grad():
-                model.base.L.data = model.base.L.data.tril()
+            if args['var_type'] == 'anisotropic':
+                with torch.no_grad():
+                    model.base.L.data = model.base.L.data.tril()
         train_acc = accuracy(model, train_loader, device=device, norm=norm_func)
         test_acc = accuracy(model, test_loader, device=device, norm=norm_func)
         robust_acc = test_attack(model, test_loader, 'FGSM', [8. / 255.], args, device)[0].item()
