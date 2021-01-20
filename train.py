@@ -44,7 +44,16 @@ def train_vanilla(model, train_loader, test_loader, args, device='cpu'):
 
 
 def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
-    optimizer = Adam(model.parameters(), lr=args['lr'], weight_decay=args['wd'])
+    if args['var_type'] == 'isotropic':
+        trainable_noise_params = {'params': model.base.sigma, 'lr': args['lr'], 'weight_decay': args['wd']}
+    elif args['var_type'] == 'anisotropic':
+        trainable_noise_params = {'params': model.base.L, 'lr': args['lr'], 'weight_decay': args['wd']}
+    optimizer = Adam([
+        {'params': model.base.gen.parameters(), 'lr': args['lr']},
+        {'params': model.base.fc1.parameters(), 'lr': args['lr']},
+        trainable_noise_params,
+        {'params': model.proto.parameters(), 'lr': args['lr'], 'weight_decay': args['wd']}
+    ])
     loss_func = nn.CrossEntropyLoss()
     if args['dataset'] == 'cifar10':
         norm_func = normalize_cifar10
@@ -54,7 +63,6 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
         norm_func = normalize_generic
     elif args['dataset'] in ('mnist', 'fmnist'):
         norm_func = None
-    lower_bound = 1e-2
     best_test_acc = -1.
     for epoch in range(args['num_epochs']):
         for data, target in train_loader:
@@ -70,28 +78,22 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
                     wca = (model.proto.weight @ model.sigma.diag() @ model.proto.weight.T).diagonal().sum()
                 elif args['var_type'] == 'anisotropic':
                     wca = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
-                loss = loss_func(logits, target) - wca
+                loss = loss_func(logits, target) - torch.log(wca)
             elif args['reg_type'] == 'max_entropy':
-                me = torch.log(model.base.dist.entropy().mean())
-                loss = loss_func(logits, target) - me
+                me = model.base.dist.entropy().mean()
+                loss = loss_func(logits, target) - torch.log(me)
             elif args['reg_type'] == 'wca+max_entropy':
                 if args['var_type'] == 'isotropic':
                     wca = (model.proto.weight @ model.sigma.diag() @ model.proto.weight.T).diagonal().sum()
                 elif args['var_type'] == 'anisotropic':
                     wca = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
-                me = torch.log(model.base.dist.entropy().mean())
-                loss = loss_func(logits, target) - wca - me
+                me = model.base.dist.entropy().mean()
+                loss = loss_func(logits, target) - torch.log(wca) - torch.log(me)
             loss.backward()
             optimizer.step()
-            with torch.no_grad():
-                # Enforce unit norm on w via projected subgradient method.
-                for c in range(args['num_classes']):
-                    model.proto.weight.data[c] /= model.proto.weight.data[c].norm()
-                # Enforce spectral norm on Sigma and update lower triangular L.
-                sigma_svd = torch.svd(model.sigma)
-                new_sigma = sigma_svd[0] @ sigma_svd[1].clamp(lower_bound, 1.).diag() @ sigma_svd[2].T
-                new_L = torch.cholesky(new_sigma)
-                model.base.L.copy_(new_L)
+            if args['var_type'] == 'anisotropic':
+                with torch.no_grad():
+                    model.base.L.data = model.base.L.data.tril()
         train_acc = accuracy(model, train_loader, device=device, norm=norm_func)
         test_acc = accuracy(model, test_loader, device=device, norm=norm_func)
         robust_acc = test_attack(model, test_loader, 'FGSM', [8. / 255.], args, device)[0].item()
@@ -105,7 +107,16 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
 
 
 def train_stochastic_adversarial(model, train_loader, test_loader, args, device='cpu'):
-    optimizer = Adam(model.parameters(), lr=args['lr'], weight_decay=args['wd'])
+    if args['var_type'] == 'isotropic':
+        trainable_noise_params = {'params': model.base.sigma, 'lr': args['lr'], 'weight_decay': args['wd']}
+    elif args['var_type'] == 'anisotropic':
+        trainable_noise_params = {'params': model.base.L, 'lr': args['lr'], 'weight_decay': args['wd']}
+    optimizer = Adam([
+        {'params': model.base.gen.parameters(), 'lr': args['lr']},
+        {'params': model.base.fc1.parameters(), 'lr': args['lr']},
+        trainable_noise_params,
+        {'params': model.proto.parameters(), 'lr': args['lr'], 'weight_decay': args['wd']}
+    ])
     loss_func = nn.CrossEntropyLoss()
     if args['dataset'] == 'cifar10':
         norm_func = normalize_cifar10
@@ -119,7 +130,6 @@ def train_stochastic_adversarial(model, train_loader, test_loader, args, device=
         attack_func = fgsm
     elif args['attack'] == 'pgd':
         attack_func = pgd
-    lower_bound = 1e-2
     best_test_acc = -1.
     for epoch in range(args['num_epochs']):
         for data, target in train_loader:
@@ -140,28 +150,22 @@ def train_stochastic_adversarial(model, train_loader, test_loader, args, device=
                     wca = (model.proto.weight @ model.sigma.diag() @ model.proto.weight.T).diagonal().sum()
                 elif args['var_type'] == 'anisotropic':
                     wca = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
-                loss = args['w_ct'] * clean_loss + args['w_at'] * adv_loss - wca
+                loss = args['w_ct'] * clean_loss + args['w_at'] * adv_loss - torch.log(wca)
             elif args['reg_type'] == 'max_entropy':
-                me = torch.log(model.base.dist.entropy().mean())
-                loss = args['w_ct'] * clean_loss + args['w_at'] * adv_loss - me
+                me = model.base.dist.entropy().mean()
+                loss = args['w_ct'] * clean_loss + args['w_at'] * adv_loss - torch.log(me)
             elif args['reg_type'] == 'wca+max_entropy':
                 if args['var_type'] == 'isotropic':
                     wca = (model.proto.weight @ model.sigma.diag() @ model.proto.weight.T).diagonal().sum()
                 elif args['var_type'] == 'anisotropic':
                     wca = (model.proto.weight @ model.sigma @ model.proto.weight.T).diagonal().sum()
-                me = torch.log(model.base.dist.entropy().mean())
-                loss = args['w_ct'] * clean_loss + args['w_at'] * adv_loss - wca - me
+                me = model.base.dist.entropy().mean()
+                loss = args['w_ct'] * clean_loss + args['w_at'] * adv_loss - torch.log(wca) - torch.log(me)
             loss.backward()
             optimizer.step()
-            with torch.no_grad():
-                # Enforce unit norm on w via projected subgradient method.
-                for c in range(args['num_classes']):
-                    model.proto.weight.data[c] /= model.proto.weight.data[c].norm()
-                # Enforce spectral norm on Sigma and update lower triangular L.
-                sigma_svd = torch.svd(model.sigma)
-                new_sigma = sigma_svd[0] @ sigma_svd[1].clamp(lower_bound, 1.).diag() @ sigma_svd[2].T
-                new_L = torch.cholesky(new_sigma)
-                model.base.L.copy_(new_L)
+            if args['var_type'] == 'anisotropic':
+                with torch.no_grad():
+                    model.base.L.data = model.base.L.data.tril()
         train_acc = accuracy(model, train_loader, device=device, norm=norm_func)
         test_acc = accuracy(model, test_loader, device=device, norm=norm_func)
         robust_acc = test_attack(model, test_loader, 'FGSM', [8. / 255.], args, device)[0].item()
