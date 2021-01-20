@@ -181,10 +181,12 @@ class ResNet(nn.Module):
                 norm_layer(planes * block.expansion))
 
         layers = []
-        layers.append(block(self.inplanes, planes, stride, downsample, self.groups, self.base_width, previous_dilation, norm_layer))
+        layers.append(block(self.inplanes, planes, stride, downsample,
+                            self.groups, self.base_width, previous_dilation, norm_layer))
         self.inplanes = planes * block.expansion
         for _ in range(1, blocks):
-            layers.append(block(self.inplanes, planes, groups=self.groups, base_width=self.base_width, dilation=self.dilation, norm_layer=norm_layer))
+            layers.append(block(self.inplanes, planes, groups=self.groups, base_width=self.base_width,
+                                dilation=self.dilation, norm_layer=norm_layer))
 
         return nn.Sequential(*layers)
 
@@ -221,3 +223,7 @@ def _resnet(arch, block, layers, pretrained, progress, **kwargs):
 
 def resnet18(pretrained=False, progress=True, **kwargs):
     return _resnet('resnet18', BasicBlock, [2, 2, 2, 2], pretrained, progress, **kwargs)
+
+
+def resnet152(pretrained=False, progress=True, **kwargs):
+    return _resnet('resnet152', Bottleneck, [3, 8, 36, 3], pretrained, progress, **kwargs)
