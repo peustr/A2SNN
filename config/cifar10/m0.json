@@ -11,8 +11,8 @@
     "var_type": null,
     "device": "cuda:0",
     "output_path": {
-        "stats": "output/stats/a2snn_cifar10_m0",
-        "models": "output/models/a2snn_cifar10_m0"
+        "stats": "output/stats/a2snn_cifar10_m0_lr=0.001_wd=0.0",
+        "models": "output/models/a2snn_cifar10_m0_lr=0.001_wd=0.0"
     },
     "monte_carlo_runs": 50
 }
