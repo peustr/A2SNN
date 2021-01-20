@@ -7,7 +7,6 @@ from torch.optim import Adam
 from attacks.fgsm import fgsm
 from attacks.pgd import pgd
 from metrics import accuracy
-from test import test_attack
 from utils import normalize_cifar10, normalize_cifar100, normalize_generic
 
 
