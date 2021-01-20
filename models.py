@@ -19,7 +19,6 @@ class Generator(nn.Module):
         self.conv4 = self._make_conv_layer(64, 64, 5)
         self.conv5 = self._make_conv_layer(64, 128, 5)
         self.conv6 = self._make_conv_layer(128, 128, 5)
-        self.fc1 = nn.Linear(2048, D)
 
     def _make_conv_layer(self, in_channels, out_channels, kernel_size):
         return nn.Sequential(
@@ -33,7 +32,6 @@ class Generator(nn.Module):
         x = self.conv5(x)
         x = self.conv6(x)
         x = torch.flatten(x, start_dim=1)
-        x = self.fc1(x)
         return x
 
 
@@ -51,10 +49,12 @@ class VanillaNet(nn.Module):
     def __init__(self, D, C):
         super().__init__()
         self.gen = Generator(D)
+        self.fc1 = nn.Linear(2048, D)
         self.proto = nn.Linear(D, C)
 
     def forward(self, x):
         x = self.gen(x)
+        x = self.fc1(x)
         x = self.proto(x)
         return x
 
@@ -90,10 +90,12 @@ class StochasticBaseDiagonal(nn.Module):
     def __init__(self, D):
         super().__init__()
         self.gen = Generator(D)
+        self.fc1 = nn.Linear(2048, D)
         self.sigma = nn.Parameter(torch.rand(D))
 
     def forward(self, x):
         x = self.gen(x)
+        x = self.fc1(x)
         self.dist = Normal(0., f.softplus(self.sigma))
         x_sample = self.dist.rsample()
         x = x + x_sample
@@ -105,6 +107,7 @@ class StochasticBaseMultivariate(nn.Module):
     def __init__(self, D):
         super().__init__()
         self.gen = Generator(D)
+        self.fc1 = nn.Linear(2048, D)
         self.mu = nn.Parameter(torch.zeros(D), requires_grad=False)
         self.L = nn.Parameter((torch.eye(D) + torch.rand(D, D)).tril())
 
@@ -114,6 +117,7 @@ class StochasticBaseMultivariate(nn.Module):
 
     def forward(self, x):
         x = self.gen(x)
+        x = self.fc1(x)
         self.dist = MultivariateNormal(self.mu, scale_tril=self.L)
         x_sample = self.dist.rsample()
         x = x + x_sample
