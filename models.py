@@ -4,7 +4,7 @@ import torch.nn.functional as f
 from torch.distributions.multivariate_normal import MultivariateNormal
 from torch.distributions.normal import Normal
 
-from resnet import resnet18
+from resnet import resnet18, resnet152
 
 
 class Generator(nn.Module):
@@ -45,6 +45,16 @@ class GeneratorResNet18(nn.Module):
         return x
 
 
+class GeneratorResNet152(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.rn = resnet152(False, zero_init_residual=True)
+
+    def forward(self, x):
+        x = self.rn(x)
+        return x
+
+
 class VanillaNet(nn.Module):
     def __init__(self, D, C):
         super().__init__()
@@ -69,6 +79,26 @@ class VanillaResNet18(nn.Module):
     def __init__(self, D, C):
         super().__init__()
         self.gen = GeneratorResNet18()
+        self.fc1 = nn.Linear(512, D)
+        self.proto = nn.Linear(D, C)
+
+    def forward(self, x):
+        x = self.gen(x)
+        x = f.relu(self.fc1(x))
+        x = self.proto(x)
+        return x
+
+    def save(self, filename):
+        torch.save(self.state_dict(), filename + ".pt")
+
+    def load(self, filename):
+        self.load_state_dict(torch.load(filename + ".pt"))
+
+
+class VanillaResNet152(nn.Module):
+    def __init__(self, D, C):
+        super().__init__()
+        self.gen = GeneratorResNet152()
         self.fc1 = nn.Linear(512, D)
         self.proto = nn.Linear(D, C)
 
@@ -163,6 +193,45 @@ class ResNet18_StochasticBaseMultivariate(nn.Module):
         return x
 
 
+class ResNet152_StochasticBaseDiagonal(nn.Module):
+    """ Zero mean, trainable variance. """
+    def __init__(self, D):
+        super().__init__()
+        self.gen = GeneratorResNet152()
+        self.fc1 = nn.Linear(4096, D)
+        self.sigma = nn.Parameter(torch.rand(D))
+
+    def forward(self, x):
+        x = self.gen(x)
+        x = f.relu(self.fc1(x))
+        self.dist = Normal(0., f.softplus(self.sigma))
+        x_sample = self.dist.rsample()
+        x = x + x_sample
+        return x
+
+
+class ResNet152_StochasticBaseMultivariate(nn.Module):
+    """ Trainable lower triangular matrix L, so Sigma=LL^T. """
+    def __init__(self, D):
+        super().__init__()
+        self.gen = GeneratorResNet152()
+        self.fc1 = nn.Linear(4096, D)
+        self.mu = nn.Parameter(torch.zeros(D), requires_grad=False)
+        self.L = nn.Parameter((torch.eye(D) + torch.rand(D, D)).tril())
+
+    @property
+    def sigma(self):
+        return self.L @ self.L.T
+
+    def forward(self, x):
+        x = self.gen(x)
+        x = f.relu(self.fc1(x))
+        self.dist = MultivariateNormal(self.mu, scale_tril=self.L)
+        x_sample = self.dist.rsample()
+        x = x + x_sample
+        return x
+
+
 class A2SNN_CNN(nn.Module):
     def __init__(self, D, C, variance_type):
         super().__init__()
@@ -213,6 +282,31 @@ class A2SNN_ResNet18(nn.Module):
         self.load_state_dict(torch.load(filename + ".pt"))
 
 
+class A2SNN_ResNet152(nn.Module):
+    def __init__(self, D, C, variance_type):
+        super().__init__()
+        if variance_type == 'isotropic':
+            self.base = ResNet152_StochasticBaseDiagonal(D)
+        elif variance_type == 'anisotropic':
+            self.base = ResNet152_StochasticBaseMultivariate(D)
+        self.proto = nn.Linear(D, C)
+
+    @property
+    def sigma(self):
+        return self.base.sigma
+
+    def forward(self, x):
+        x = self.base(x)
+        x = self.proto(x)
+        return x
+
+    def save(self, filename):
+        torch.save(self.state_dict(), filename + ".pt")
+
+    def load(self, filename):
+        self.load_state_dict(torch.load(filename + ".pt"))
+
+
 def model_factory(dataset, training_type, variance_type, feature_dim, num_classes):
     if variance_type is not None and variance_type not in ('isotropic', 'anisotropic'):
         raise NotImplementedError('Only "isotropic" and "anisotropic" variance types supported.')
@@ -233,9 +327,9 @@ def model_factory(dataset, training_type, variance_type, feature_dim, num_classe
             model = A2SNN_ResNet18(feature_dim, num_classes, variance_type)
     elif dataset == 'cifar100':
         if training_type == 'vanilla':
-            model = VanillaResNet18(feature_dim, num_classes)
+            model = VanillaResNet152(feature_dim, num_classes)
         elif training_type in ('stochastic', 'stochastic+adversarial'):
-            model = A2SNN_ResNet18(feature_dim, num_classes, variance_type)
+            model = A2SNN_ResNet152(feature_dim, num_classes, variance_type)
     elif dataset == 'svhn':
         if training_type == 'vanilla':
             model = VanillaResNet18(feature_dim, num_classes)
