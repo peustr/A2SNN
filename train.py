@@ -39,6 +39,7 @@ def train_vanilla(model, train_loader, test_loader, args, device='cpu'):
         if test_acc > best_test_acc:
             best_test_acc = test_acc
             torch.save(model.state_dict(), os.path.join(args['output_path']['models'], 'ckpt_best.pt'))
+            print('Best accuracy achieved on epoch {}.'.format(epoch + 1))
         print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}'.format(epoch + 1, train_acc, test_acc))
 
 
