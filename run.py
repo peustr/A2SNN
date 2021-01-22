@@ -32,8 +32,8 @@ def train(args, device):
         args['dataset'], args['training_type'], args['var_type'], args['feature_dim'], args['num_classes'])
     model.to(device)
     if args['pretrained'] is not None:
-        if args['pretrained'] not in ('ckpt', 'ckpt_last', 'ckpt_robust'):
-            raise ValueError('Pre-trained model name must be: [ckpt|ckpt_best|ckpt_robust]')
+        if args['pretrained'] not in ('ckpt_best', 'ckpt_last', 'ckpt_robust'):
+            raise ValueError('Pre-trained model name must be: [ckpt_best|ckpt_last|ckpt_robust]')
         model.load(os.path.join(args['output_path']['models'], args['pretrained']))
     if args['training_type'] == 'vanilla':
         print('Vanilla training.')

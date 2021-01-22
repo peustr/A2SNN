@@ -54,6 +54,8 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
         trainable_noise_params,
         {'params': model.proto.parameters(), 'lr': args['lr'], 'weight_decay': args['wd']}
     ])
+    # Uncomment for the "train model and noise separately" ablation. But first train a model with disable_noise=True.
+    # model.freeze_model_params()
     loss_func = nn.CrossEntropyLoss()
     if args['dataset'] == 'cifar10':
         norm_func = normalize_cifar10
@@ -114,6 +116,8 @@ def train_stochastic_adversarial(model, train_loader, test_loader, args, device=
         trainable_noise_params,
         {'params': model.proto.parameters(), 'lr': args['lr'], 'weight_decay': args['wd']}
     ])
+    # Uncomment for the "train model and noise separately" ablation. But first train a model with disable_noise=True.
+    # model.freeze_model_params()
     loss_func = nn.CrossEntropyLoss()
     if args['dataset'] == 'cifar10':
         norm_func = normalize_cifar10

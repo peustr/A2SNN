@@ -117,29 +117,32 @@ class VanillaResNet152(nn.Module):
 
 class StochasticBaseDiagonal(nn.Module):
     """ Zero mean, trainable variance. """
-    def __init__(self, D):
+    def __init__(self, D, disable_noise=False):
         super().__init__()
         self.gen = Generator(D)
         self.fc1 = nn.Linear(2048, D)
-        self.sigma = nn.Parameter(torch.rand(D))
+        self.sigma = nn.Parameter(torch.rand(D), requires_grad=(not disable_noise))
+        self.disable_noise = disable_noise
 
     def forward(self, x):
         x = self.gen(x)
         x = self.fc1(x)
-        self.dist = Normal(0., f.softplus(self.sigma))
-        x_sample = self.dist.rsample()
-        x = x + x_sample
+        if not self.disable_noise:
+            self.dist = Normal(0., f.softplus(self.sigma))
+            x_sample = self.dist.rsample()
+            x = x + x_sample
         return x
 
 
 class StochasticBaseMultivariate(nn.Module):
     """ Trainable lower triangular matrix L, so Sigma=LL^T. """
-    def __init__(self, D):
+    def __init__(self, D, disable_noise=False):
         super().__init__()
         self.gen = Generator(D)
         self.fc1 = nn.Linear(2048, D)
         self.mu = nn.Parameter(torch.zeros(D), requires_grad=False)
-        self.L = nn.Parameter((torch.eye(D) + torch.rand(D, D)).tril())
+        self.L = nn.Parameter(torch.rand(D, D).tril(), requires_grad=(not disable_noise))
+        self.disable_noise = disable_noise
 
     @property
     def sigma(self):
@@ -148,37 +151,41 @@ class StochasticBaseMultivariate(nn.Module):
     def forward(self, x):
         x = self.gen(x)
         x = self.fc1(x)
-        self.dist = MultivariateNormal(self.mu, scale_tril=self.L)
-        x_sample = self.dist.rsample()
-        x = x + x_sample
+        if not self.disable_noise:
+            self.dist = MultivariateNormal(self.mu, scale_tril=self.L)
+            x_sample = self.dist.rsample()
+            x = x + x_sample
         return x
 
 
 class ResNet18_StochasticBaseDiagonal(nn.Module):
     """ Zero mean, trainable variance. """
-    def __init__(self, D):
+    def __init__(self, D, disable_noise=False):
         super().__init__()
         self.gen = GeneratorResNet18()
         self.fc1 = nn.Linear(512, D)
-        self.sigma = nn.Parameter(torch.rand(D))
+        self.sigma = nn.Parameter(torch.rand(D), requires_grad=(not disable_noise))
+        self.disable_noise = disable_noise
 
     def forward(self, x):
         x = self.gen(x)
         x = f.relu(self.fc1(x))
-        self.dist = Normal(0., f.softplus(self.sigma))
-        x_sample = self.dist.rsample()
-        x = x + x_sample
+        if not self.disable_noise:
+            self.dist = Normal(0., f.softplus(self.sigma))
+            x_sample = self.dist.rsample()
+            x = x + x_sample
         return x
 
 
 class ResNet18_StochasticBaseMultivariate(nn.Module):
     """ Trainable lower triangular matrix L, so Sigma=LL^T. """
-    def __init__(self, D):
+    def __init__(self, D, disable_noise=False):
         super().__init__()
         self.gen = GeneratorResNet18()
         self.fc1 = nn.Linear(512, D)
         self.mu = nn.Parameter(torch.zeros(D), requires_grad=False)
-        self.L = nn.Parameter((torch.eye(D) + torch.rand(D, D)).tril())
+        self.L = nn.Parameter(torch.rand(D, D).tril(), requires_grad=(not disable_noise))
+        self.disable_noise = disable_noise
 
     @property
     def sigma(self):
@@ -187,37 +194,41 @@ class ResNet18_StochasticBaseMultivariate(nn.Module):
     def forward(self, x):
         x = self.gen(x)
         x = f.relu(self.fc1(x))
-        self.dist = MultivariateNormal(self.mu, scale_tril=self.L)
-        x_sample = self.dist.rsample()
-        x = x + x_sample
+        if not self.disable_noise:
+            self.dist = MultivariateNormal(self.mu, scale_tril=self.L)
+            x_sample = self.dist.rsample()
+            x = x + x_sample
         return x
 
 
 class ResNet152_StochasticBaseDiagonal(nn.Module):
     """ Zero mean, trainable variance. """
-    def __init__(self, D):
+    def __init__(self, D, disable_noise=False):
         super().__init__()
         self.gen = GeneratorResNet152()
         self.fc1 = nn.Linear(4096, D)
-        self.sigma = nn.Parameter(torch.rand(D))
+        self.sigma = nn.Parameter(torch.rand(D), requires_grad=(not disable_noise))
+        self.disable_noise = disable_noise
 
     def forward(self, x):
         x = self.gen(x)
         x = f.relu(self.fc1(x))
-        self.dist = Normal(0., f.softplus(self.sigma))
-        x_sample = self.dist.rsample()
-        x = x + x_sample
+        if not self.disable_noise:
+            self.dist = Normal(0., f.softplus(self.sigma))
+            x_sample = self.dist.rsample()
+            x = x + x_sample
         return x
 
 
 class ResNet152_StochasticBaseMultivariate(nn.Module):
     """ Trainable lower triangular matrix L, so Sigma=LL^T. """
-    def __init__(self, D):
+    def __init__(self, D, disable_noise=False):
         super().__init__()
         self.gen = GeneratorResNet152()
         self.fc1 = nn.Linear(4096, D)
         self.mu = nn.Parameter(torch.zeros(D), requires_grad=False)
-        self.L = nn.Parameter((torch.eye(D) + torch.rand(D, D)).tril())
+        self.L = nn.Parameter(torch.rand(D, D).tril(), requires_grad=(not disable_noise))
+        self.disable_noise = disable_noise
 
     @property
     def sigma(self):
@@ -226,19 +237,20 @@ class ResNet152_StochasticBaseMultivariate(nn.Module):
     def forward(self, x):
         x = self.gen(x)
         x = f.relu(self.fc1(x))
-        self.dist = MultivariateNormal(self.mu, scale_tril=self.L)
-        x_sample = self.dist.rsample()
-        x = x + x_sample
+        if not self.disable_noise:
+            self.dist = MultivariateNormal(self.mu, scale_tril=self.L)
+            x_sample = self.dist.rsample()
+            x = x + x_sample
         return x
 
 
 class A2SNN_CNN(nn.Module):
-    def __init__(self, D, C, variance_type):
+    def __init__(self, D, C, variance_type, disable_noise=False):
         super().__init__()
         if variance_type == 'isotropic':
-            self.base = StochasticBaseDiagonal(D)
+            self.base = StochasticBaseDiagonal(D, disable_noise=disable_noise)
         elif variance_type == 'anisotropic':
-            self.base = StochasticBaseMultivariate(D)
+            self.base = StochasticBaseMultivariate(D, disable_noise=disable_noise)
         self.proto = nn.Linear(D, C)
 
     @property
@@ -255,15 +267,33 @@ class A2SNN_CNN(nn.Module):
 
     def load(self, filename):
         self.load_state_dict(torch.load(filename + ".pt"))
+
+    def freeze_model_params(self):
+        """ Freezes all model parameters except for the noise layer (used for ablation). """
+        for param in self.base.gen.parameters():
+            param.requires_grad = False
+        for param in self.base.fc1.parameters():
+            param.requires_grad = False
+        for param in self.base.proto.parameters():
+            param.requires_grad = False
+
+    def unfreeze_model_params(self):
+        """ Reverses `freeze_model_params`. """
+        for param in self.base.gen.parameters():
+            param.requires_grad = True
+        for param in self.base.fc1.parameters():
+            param.requires_grad = True
+        for param in self.base.proto.parameters():
+            param.requires_grad = True
 
 
 class A2SNN_ResNet18(nn.Module):
-    def __init__(self, D, C, variance_type):
+    def __init__(self, D, C, variance_type, disable_noise=False):
         super().__init__()
         if variance_type == 'isotropic':
-            self.base = ResNet18_StochasticBaseDiagonal(D)
+            self.base = ResNet18_StochasticBaseDiagonal(D, disable_noise=disable_noise)
         elif variance_type == 'anisotropic':
-            self.base = ResNet18_StochasticBaseMultivariate(D)
+            self.base = ResNet18_StochasticBaseMultivariate(D, disable_noise=disable_noise)
         self.proto = nn.Linear(D, C)
 
     @property
@@ -280,15 +310,33 @@ class A2SNN_ResNet18(nn.Module):
 
     def load(self, filename):
         self.load_state_dict(torch.load(filename + ".pt"))
+
+    def freeze_model_params(self):
+        """ Freezes all model parameters except for the noise layer (used for ablation). """
+        for param in self.base.gen.parameters():
+            param.requires_grad = False
+        for param in self.base.fc1.parameters():
+            param.requires_grad = False
+        for param in self.base.proto.parameters():
+            param.requires_grad = False
+
+    def unfreeze_model_params(self):
+        """ Reverses `freeze_model_params`. """
+        for param in self.base.gen.parameters():
+            param.requires_grad = True
+        for param in self.base.fc1.parameters():
+            param.requires_grad = True
+        for param in self.base.proto.parameters():
+            param.requires_grad = True
 
 
 class A2SNN_ResNet152(nn.Module):
-    def __init__(self, D, C, variance_type):
+    def __init__(self, D, C, variance_type, disable_noise=False):
         super().__init__()
         if variance_type == 'isotropic':
-            self.base = ResNet152_StochasticBaseDiagonal(D)
+            self.base = ResNet152_StochasticBaseDiagonal(D, disable_noise=disable_noise)
         elif variance_type == 'anisotropic':
-            self.base = ResNet152_StochasticBaseMultivariate(D)
+            self.base = ResNet152_StochasticBaseMultivariate(D, disable_noise=disable_noise)
         self.proto = nn.Linear(D, C)
 
     @property
@@ -305,6 +353,24 @@ class A2SNN_ResNet152(nn.Module):
 
     def load(self, filename):
         self.load_state_dict(torch.load(filename + ".pt"))
+
+    def freeze_model_params(self):
+        """ Freezes all model parameters except for the noise layer (used for ablation). """
+        for param in self.base.gen.parameters():
+            param.requires_grad = False
+        for param in self.base.fc1.parameters():
+            param.requires_grad = False
+        for param in self.base.proto.parameters():
+            param.requires_grad = False
+
+    def unfreeze_model_params(self):
+        """ Reverses `freeze_model_params`. """
+        for param in self.base.gen.parameters():
+            param.requires_grad = True
+        for param in self.base.fc1.parameters():
+            param.requires_grad = True
+        for param in self.base.proto.parameters():
+            param.requires_grad = True
 
 
 def model_factory(dataset, training_type, variance_type, feature_dim, num_classes):
