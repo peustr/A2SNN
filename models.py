@@ -274,7 +274,7 @@ class A2SNN_CNN(nn.Module):
             param.requires_grad = False
         for param in self.base.fc1.parameters():
             param.requires_grad = False
-        for param in self.base.proto.parameters():
+        for param in self.proto.parameters():
             param.requires_grad = False
 
     def unfreeze_model_params(self):
@@ -283,7 +283,7 @@ class A2SNN_CNN(nn.Module):
             param.requires_grad = True
         for param in self.base.fc1.parameters():
             param.requires_grad = True
-        for param in self.base.proto.parameters():
+        for param in self.proto.parameters():
             param.requires_grad = True
 
 
@@ -317,7 +317,7 @@ class A2SNN_ResNet18(nn.Module):
             param.requires_grad = False
         for param in self.base.fc1.parameters():
             param.requires_grad = False
-        for param in self.base.proto.parameters():
+        for param in self.proto.parameters():
             param.requires_grad = False
 
     def unfreeze_model_params(self):
@@ -326,7 +326,7 @@ class A2SNN_ResNet18(nn.Module):
             param.requires_grad = True
         for param in self.base.fc1.parameters():
             param.requires_grad = True
-        for param in self.base.proto.parameters():
+        for param in self.proto.parameters():
             param.requires_grad = True
 
 
@@ -360,7 +360,7 @@ class A2SNN_ResNet152(nn.Module):
             param.requires_grad = False
         for param in self.base.fc1.parameters():
             param.requires_grad = False
-        for param in self.base.proto.parameters():
+        for param in self.proto.parameters():
             param.requires_grad = False
 
     def unfreeze_model_params(self):
@@ -369,7 +369,7 @@ class A2SNN_ResNet152(nn.Module):
             param.requires_grad = True
         for param in self.base.fc1.parameters():
             param.requires_grad = True
-        for param in self.base.proto.parameters():
+        for param in self.proto.parameters():
             param.requires_grad = True
 
 
