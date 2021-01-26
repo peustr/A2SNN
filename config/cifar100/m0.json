@@ -1,6 +1,6 @@
 {
     "dataset": "cifar100",
-    "num_classes": 10,
+    "num_classes": 100,
     "pretrained": null,
     "batch_size": 128,
     "num_epochs": 200,
