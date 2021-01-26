@@ -206,7 +206,7 @@ class ResNet152_StochasticBaseDiagonal(nn.Module):
     def __init__(self, D, disable_noise=False):
         super().__init__()
         self.gen = GeneratorResNet152()
-        self.fc1 = nn.Linear(4096, D)
+        self.fc1 = nn.Linear(2048, D)
         self.sigma = nn.Parameter(torch.rand(D), requires_grad=(not disable_noise))
         self.disable_noise = disable_noise
 
@@ -225,7 +225,7 @@ class ResNet152_StochasticBaseMultivariate(nn.Module):
     def __init__(self, D, disable_noise=False):
         super().__init__()
         self.gen = GeneratorResNet152()
-        self.fc1 = nn.Linear(4096, D)
+        self.fc1 = nn.Linear(2048, D)
         self.mu = nn.Parameter(torch.zeros(D), requires_grad=False)
         self.L = nn.Parameter(torch.rand(D, D).tril(), requires_grad=(not disable_noise))
         self.disable_noise = disable_noise
