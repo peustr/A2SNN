@@ -393,9 +393,9 @@ def model_factory(dataset, training_type, variance_type, feature_dim, num_classe
             model = A2SNN_ResNet18(feature_dim, num_classes, variance_type)
     elif dataset == 'cifar100':
         if training_type == 'vanilla':
-            model = VanillaResNet152(feature_dim, num_classes)
+            model = VanillaResNet18(feature_dim, num_classes)
         elif training_type in ('stochastic', 'stochastic+adversarial'):
-            model = A2SNN_ResNet152(feature_dim, num_classes, variance_type)
+            model = A2SNN_ResNet18(feature_dim, num_classes, variance_type)
     elif dataset == 'svhn':
         if training_type == 'vanilla':
             model = VanillaResNet18(feature_dim, num_classes)
