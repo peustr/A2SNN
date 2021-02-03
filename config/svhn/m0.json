@@ -3,7 +3,7 @@
     "num_classes": 10,
     "pretrained": null,
     "batch_size": 128,
-    "num_epochs": 200,
+    "num_epochs": 300,
     "feature_dim": 32,
     "lr": 0.001,
     "wd": 0.0,
@@ -11,8 +11,8 @@
     "var_type": null,
     "device": "cuda:0",
     "output_path": {
-        "stats": "output/stats/a2snn_svhn_m0_lr=0.001_wd=0.0",
-        "models": "output/models/a2snn_svhn_m0_lr=0.001_wd=0.0"
+        "stats": "output/stats/a2snn_svhn_m0",
+        "models": "output/models/a2snn_svhn_m0"
     },
     "monte_carlo_runs": 50
 }

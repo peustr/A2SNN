@@ -44,16 +44,7 @@ def train_vanilla(model, train_loader, test_loader, args, device='cpu'):
 
 
 def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
-    if args['var_type'] == 'isotropic':
-        trainable_noise_params = {'params': model.base.sigma, 'lr': args['lr'], 'weight_decay': args['wd']}
-    elif args['var_type'] == 'anisotropic':
-        trainable_noise_params = {'params': model.base.L, 'lr': args['lr'], 'weight_decay': args['wd']}
-    optimizer = Adam([
-        {'params': model.base.gen.parameters(), 'lr': args['lr']},
-        {'params': model.base.fc1.parameters(), 'lr': args['lr']},
-        trainable_noise_params,
-        {'params': model.proto.parameters(), 'lr': args['lr'], 'weight_decay': args['wd']}
-    ])
+    optimizer = Adam(model.parameters(), lr=args['lr'], weight_decay=args['wd'])
     # Uncomment for the "train model and noise separately" ablation. But first train a model with disable_noise=True.
     # model.freeze_model_params()
     loss_func = nn.CrossEntropyLoss()
@@ -93,9 +84,23 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
                 loss = loss_func(logits, target) - torch.log(wca) - torch.log(me)
             loss.backward()
             optimizer.step()
-            if args['var_type'] == 'anisotropic':
+            if args['var_type'] == 'isotropic':
                 with torch.no_grad():
-                    model.base.L.data = model.base.L.data.tril()
+                    # Enforce unit norm on w via projected subgradient method.
+                    for c in range(args['num_classes']):
+                        model.proto.weight.data[c] /= model.proto.weight.data[c].norm()
+                    # Enforce spectral norm on Sigma.
+                    model.base.sigma.clamp_(0.1, 1)
+            elif args['var_type'] == 'anisotropic':
+                with torch.no_grad():
+                    # Enforce unit norm on w via projected subgradient method.
+                    for c in range(args['num_classes']):
+                        model.proto.weight.data[c] /= model.proto.weight.data[c].norm()
+                    # Enforce spectral norm on Sigma and update lower triangular L.
+                    sigma_svd = torch.svd(model.sigma)
+                    new_sigma = sigma_svd[0] @ sigma_svd[1].clamp(0.1, 1.).diag() @ sigma_svd[2].T
+                    new_L = torch.cholesky(new_sigma)
+                    model.base.L.copy_(new_L)
         train_acc = accuracy(model, train_loader, device=device, norm=norm_func)
         test_acc = accuracy(model, test_loader, device=device, norm=norm_func)
         print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}'.format(epoch + 1, train_acc, test_acc))
@@ -106,16 +111,7 @@ def train_stochastic(model, train_loader, test_loader, args, device='cpu'):
 
 
 def train_stochastic_adversarial(model, train_loader, test_loader, args, device='cpu'):
-    if args['var_type'] == 'isotropic':
-        trainable_noise_params = {'params': model.base.sigma, 'lr': args['lr'], 'weight_decay': args['wd']}
-    elif args['var_type'] == 'anisotropic':
-        trainable_noise_params = {'params': model.base.L, 'lr': args['lr'], 'weight_decay': args['wd']}
-    optimizer = Adam([
-        {'params': model.base.gen.parameters(), 'lr': args['lr']},
-        {'params': model.base.fc1.parameters(), 'lr': args['lr']},
-        trainable_noise_params,
-        {'params': model.proto.parameters(), 'lr': args['lr'], 'weight_decay': args['wd']}
-    ])
+    optimizer = Adam(model.parameters(), lr=args['lr'], weight_decay=args['wd'])
     # Uncomment for the "train model and noise separately" ablation. But first train a model with disable_noise=True.
     # model.freeze_model_params()
     loss_func = nn.CrossEntropyLoss()
@@ -164,9 +160,23 @@ def train_stochastic_adversarial(model, train_loader, test_loader, args, device=
                 loss = args['w_ct'] * clean_loss + args['w_at'] * adv_loss - torch.log(wca) - torch.log(me)
             loss.backward()
             optimizer.step()
-            if args['var_type'] == 'anisotropic':
+            if args['var_type'] == 'isotropic':
                 with torch.no_grad():
-                    model.base.L.data = model.base.L.data.tril()
+                    # Enforce unit norm on w via projected subgradient method.
+                    for c in range(args['num_classes']):
+                        model.proto.weight.data[c] /= model.proto.weight.data[c].norm()
+                    # Enforce spectral norm on Sigma.
+                    model.base.sigma.clamp_(0.1, 1)
+            elif args['var_type'] == 'anisotropic':
+                with torch.no_grad():
+                    # Enforce unit norm on w via projected subgradient method.
+                    for c in range(args['num_classes']):
+                        model.proto.weight.data[c] /= model.proto.weight.data[c].norm()
+                    # Enforce spectral norm on Sigma and update lower triangular L.
+                    sigma_svd = torch.svd(model.sigma)
+                    new_sigma = sigma_svd[0] @ sigma_svd[1].clamp(0.1, 1.).diag() @ sigma_svd[2].T
+                    new_L = torch.cholesky(new_sigma)
+                    model.base.L.copy_(new_L)
         train_acc = accuracy(model, train_loader, device=device, norm=norm_func)
         test_acc = accuracy(model, test_loader, device=device, norm=norm_func)
         print('Epoch {:03}, Train acc: {:.3f}, Test acc: {:.3f}'.format(epoch + 1, train_acc, test_acc))
