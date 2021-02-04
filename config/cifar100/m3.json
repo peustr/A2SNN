@@ -4,20 +4,16 @@
     "pretrained": null,
     "batch_size": 128,
     "num_epochs": 600,
-    "feature_dim": 32,
-    "lr": 0.001,
-    "wd": 0.0,
-    "training_type": "stochastic+adversarial",
-    "w_ct": 0.5,
-    "w_at": 0.5,
-    "attack": "pgd",
-    "epsilon": 0.03,
+    "feature_dim": 256,
+    "lr": 0.01,
+    "wd": 0.0001,
+    "training_type": "stochastic",
     "var_type": "anisotropic",
-    "reg_type": "wca+max_entropy",
-    "device": "cuda:3",
+    "reg_type": "max_entropy",
+    "device": "cuda:2",
     "output_path": {
-        "stats": "output/stats/a2snn_cifar100_m3",
-        "models": "output/models/a2snn_cifar100_m3"
+        "stats": "output/stats/a2snn_cifar100_m3_lr=0.01_wd=0.0001",
+        "models": "output/models/a2snn_cifar100_m3_lr=0.01_wd=0.0001"
     },
     "monte_carlo_runs": 50
 }
