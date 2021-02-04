@@ -8,12 +8,12 @@
     "lr": 0.01,
     "wd": 0.0001,
     "training_type": "stochastic",
-    "var_type": "isotropic",
-    "reg_type": "max_entropy",
+    "var_type": "anisotropic",
+    "reg_type": "wca+max_entropy",
     "device": "cuda:0",
     "output_path": {
-        "stats": "output/stats/a2snn_cifar100_m1_lr=0.01_wd=0.0001",
-        "models": "output/models/a2snn_cifar100_m1_lr=0.01_wd=0.0001"
+        "stats": "output/stats/a2snn_cifar100_m5_lr=0.01_wd=0.0001",
+        "models": "output/models/a2snn_cifar100_m5_lr=0.01_wd=0.0001"
     },
     "monte_carlo_runs": 50
 }
