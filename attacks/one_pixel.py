@@ -98,8 +98,7 @@ def attack_all(net, loader, preproc, device, pixels=1, targeted=False, maxiter=7
             else:
                 success_rate = float(success) / correct
             if flag == 1:
-                print("Success rate: {} ({}/{}) [(x,y) = ({},{}) and (R,G,B)=({},{},{})]".format(
-                    success_rate, success, correct, x[0], x[1], x[2], x[3], x[4]))
+                print("Success rate: {} ({}/{}) [{}]".format(success_rate, success, correct, x))
     return success_rate
 
 
