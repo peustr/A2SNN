@@ -20,7 +20,7 @@ def main():
     # model.load(m0_path)
     model = model_factory('cifar10', 'stochastic', 'anisotropic', 32, 10)
     model.load(m4_path)
-    # model.disable_noise = True
+    # model.base.disable_noise = True
     model.eval()
 
     dl = get_data_loader('cifar10', 1, train=False, shuffle=False, drop_last=False)
